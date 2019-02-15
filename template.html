@@ -1,0 +1,253 @@
+<!doctype html>
+<html>
+
+  <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    $if(title)$
+	<title>
+      $title$$if(subtitle)$: $subtitle$ $endif$
+    </title>
+    $endif$
+
+	<!-- our slightly modified version of reveal's css -->
+	<link rel="stylesheet" href="$template$/css/reveal.css">
+
+	<!-- Theme of AG CG (derived from reveal's white.css) -->
+	<link rel="stylesheet" href="$template$/css/agcg.css">
+
+    <!-- font needed for chalkboard buttons -->
+    <!--<link rel="stylesheet" href="$template$/Font-Awesome/css/all.css">-->
+    <link rel="stylesheet" href="$template$/reveal.js-menu/font-awesome/css/all.css">
+
+	<!-- Setup code formatting with highlight.js -->
+	<link rel="stylesheet" href="$template$/cg-highlight/xcode.css">
+
+    <!-- color picker for chalkboard -->
+    <script src="$template$/piklor.js/src/piklor.js"></script>
+
+    <!-- stuff for quiz -->
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script src="http://davidshimjs.github.com/qrcodejs/qrcode.min.js"></script>
+
+
+	<!-- Printing and PDF exports -->
+	<script>
+	  var link = document.createElement( 'link' );
+	  link.rel = 'stylesheet';
+	  link.type = 'text/css';
+	  link.href = window.location.search.match( /print-pdf/gi ) ? '$template$/reveal.js/css/print/pdf.css' : '$template$/reveal.js/css/print/paper.css';
+	  document.getElementsByTagName( 'head' )[0].appendChild( link );
+
+      // MARIO version
+	  if (window.location.search.match( /print-pdf/gi ))
+      {
+	    var link = document.createElement( 'link' );
+	    link.rel = 'stylesheet';
+	    link.type = 'text/css';
+	    link.href = '$template$/css/agcg-pdf.css';
+	    document.getElementsByTagName( 'head' )[0].appendChild( link );
+      }
+	</script>
+
+
+    <!-- MathJax config -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+          jax: ["input/TeX","output/CommonHTML"],
+          extensions: ["TeX/AMSmath.js"],
+          menuSettings: { zoom: "Double-Click" },
+          styles: { ".reveal section .MJXc-display": { margin: "0.5em 0em 1em 0em" } },
+          TeX: {
+              Macros: {
+                R: "{\\mathrm{{I}\\kern-.15em{R}}}",
+                laplace: "{\\Delta}",
+                grad: "{\\nabla}",
+                T: "^{\\mathsf{T}}",
+                abs: ['\\left\\lvert #1 \\right\\rvert', 1],
+                norm: ['\\left\\Vert #1 \\right\\Vert', 1],
+                iprod: ['\\left\\langle #1 \\right\\rangle', 1],
+                vec: ['\\boldsymbol{\\mathbf{#1}}', 1],
+                mat: ['\\boldsymbol{\\mathbf{#1}}', 1],
+                set: ['\\mathcal{#1}', 1],
+                func: ['\\mathrm{#1}', 1],
+                trans: ['{#1}\\mkern-1mu^{\\mathsf{T}}', 1],
+                matrix: ['\\begin{bmatrix} #1 \\end{bmatrix}', 1],
+                vector: ['\\begin{pmatrix} #1 \\end{pmatrix}', 1],
+                of: ['\\mkern{-2mu}\\left( #1 \\right\)', 1],
+                diff: ['\\frac{\\mathrm{d}{#1}}{\\mathrm{d}{#2}}', 2],
+                pdiff: ['\\frac{\\partial {#1}}{\\partial {#2}}', 2]
+              }
+          },
+          "CommonHTML": { matchFontHeight: false }
+      });
+    </script>
+
+  </head>
+
+  <body>
+
+
+    <!-- here come the slides -->
+    <div class="reveal">
+	  <div class="slides">
+
+
+        <!-- Title slide -->
+        $if(title)$
+        <section>
+            <div class="white-on-blue">
+                <div class="title"> $title$ </div>
+                $if(subtitle)$
+                <div class="subtitle"> $subtitle$ </div>
+                $endif$
+            </div>
+            $if(teaser)$
+            <div class="teaser">
+                <img src=$teaser$>
+            </div>
+            $endif$
+            $if(author)$
+            <div class="author"> $author$ </div>
+            $if(affiliation)$
+            <div class="affiliation"> $affiliation$ </div>
+            $endif$
+            $endif$
+        </section>
+        $endif$
+
+
+        <!-- Table of Contents -->
+        $if(toc)$
+        <section>
+          <h2>Outline</h2>
+          <nav id="$idprefix$TOC">
+            $toc$
+          </nav>
+        </section>
+        $endif$
+
+
+<!-- all the slides from markdown document: DO NOT INDENT THE body LINE!!! -->
+$body$
+
+
+	  </div>
+	</div>
+
+
+	<script src="$template$/reveal.js/lib/js/head.min.js"></script>
+	<script src="$template$/reveal.js/js/reveal.js"></script>
+
+
+	<script>
+
+	  // More info https://github.com/hakimel/reveal.js#configuration
+	  Reveal.initialize({
+
+
+      // reveal settings
+      controls:     false,
+      progress:     false,
+      slideNumber:  true,
+	  history:      true,
+      center:       false,
+      transition:   'none',
+      viewDistance: 2, // otherwise videos start early
+      width:        $if(width)$  $width$  $else$ 1024 $endif$,
+      height:       $if(height)$ $height$ $else$  768 $endif$,
+      minScale:     0.2,
+      maxScale:     5,
+      pdfMaxPagesPerSlide: 1, // slides are cropped on one page for PDF export
+      pdfSeparateFragments: false, // otherwise slides with fragments and math do not work
+
+
+      // use local mathjax installation, use CommonHTML
+      math: { mathjax: '$template$/MathJax/MathJax.js', config: 'TeX-AMS_CHTML-full' },
+
+
+      // setup chalkboard
+      chalkboard: {
+        src:        "$chalkboard$"
+      },
+
+
+      // setup reveal-menu
+      menu: {
+        side:              'right',
+        numbers:           false,
+        titleSelector:     'h1',
+        hideMissingTitles: false,
+        markers:           false,
+        custom:            false,
+        themes:            false,
+        transitions:       false,
+        openButton:        false,
+        openSlideNumber:   true,
+        keyboard:          true
+      },
+
+
+      // setup charts
+      chart: {
+        defaults: {
+            global: {
+                "defaultFontFamily": "Lato",
+                "defaultFontColor": "black",
+                "defaultFontSize": 20,
+                title: {
+                    "fontFamily": "Lato",
+                    "fontSize": 30,
+                },
+                legend: {
+                    "position": "bottom"
+                }
+            },
+        },
+        line: {
+            backgroundColor: [ "rgba(42,157,223,.1)", "rgba(245,159,0,.1)", "rgba(182,200,40,.1)" ],
+            borderColor:     [ "rgba(42,157,223,1)", "rgba(245,159,0,1)", "rgba(182,200,40,1)" ],
+        },
+        bar: {
+            backgroundColor: [ "rgba(42,157,223,.8)", "rgba(245,159,0,.8)", "rgba(182,200,40,.8)" ],
+            borderColor:     [ "rgba(42,157,223,1)", "rgba(245,159,0,1)", "rgba(182,200,40,1)" ]
+        },
+        pie: {
+            backgroundColor: [ ["rgba(0,0,0,.8)" , "rgba(220,20,20,.8)", "rgba(20,220,20,.8)", "rgba(220,220,20,.8)", "rgba(20,20,220,.8)"] ]},
+        radar: {
+            borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ]
+        }
+      },
+
+
+      // keyboard shortcuts
+      keyboard: {
+      40: function() { Reveal.next(); },                       // up:   next slide
+      38: function() { Reveal.prev(); },                       // down: prev slide
+      },
+
+
+      // load plugins
+	  dependencies: [
+	  { src: '$template$/reveal.js/plugin/math/math.js' },
+	  { src: '$template$/reveal.js/plugin/notes/notes.js', async: true },
+      { src: '$template$/reveal.js-menu/menu.js' },
+      { src: '$template$/reveal.js-plugins/chart/Chart.min.js' },
+      { src: '$template$/reveal.js-plugins/chart/csv2chart.js' },
+      { src: '$template$/cg-zoom/zoom.js', async: true },
+      { src: '$template$/cg-chalkboard/chalkboard.js' }, // do not load this async, otherwise print wont work)
+      { src: '$template$/cg-quiz/quiz.js', async: true },
+	  { src: '$template$/cg-highlight/highlight.js', async: true, callback: function() {
+        var code_blocks = document.querySelectorAll('code');
+        for( var i = 0, len = code_blocks.length; i < len; i++ )  hljs.highlightBlock(code_blocks[i]);
+      }}
+      ]
+
+	  });
+    </script>
+
+  </body>
+
+</html>

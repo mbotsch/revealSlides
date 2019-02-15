@@ -1,0 +1,16 @@
+/* MARIO */
+.reveal .comment {
+	position: absolute;
+	margin: auto;
+    right: auto;
+    bottom: auto;
+    width: auto;
+    height: auto;
+}
+
+.reveal footer {
+    position: absolute;
+	display: block;
+	overflow: visible;
+	margin: auto;
+}
