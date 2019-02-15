@@ -36,7 +36,6 @@ clean:
 	--mathjax \
 	--filter $(FILTER)/cols \
 	--filter $(FILTER)/media \
-	--filter $(FILTER)/clean \
 	--template $(TEMPLATE) \
 	--variable template=$(REVEAL) \
 	--variable chalkboard=${<:.md=.json} \

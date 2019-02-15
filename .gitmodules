@@ -13,3 +13,6 @@
 [submodule "piklor.js"]
 	path = piklor.js
 	url = https://github.com/jillix/piklor.js.git
+[submodule "qrcodejs"]
+	path = qrcodejs
+	url = https://github.com/davidshimjs/qrcodejs.git
