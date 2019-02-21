@@ -9,10 +9,6 @@
  ******************************************************************/
 
 
-// todo:
-// - get rid of container divs, use canvas only?
-
-
 var RevealChalkboard = window.RevealChalkboard || (function(){
 
     var DEBUG = false;
@@ -174,43 +170,33 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 		var width  = Reveal.getConfig().width;
 		var height = Reveal.getConfig().height;
 
-        // create div container
-		var container = document.createElement( 'div' );
-		container.classList.add( 'overlay' );
-		container.setAttribute( 'data-prevent-swipe', '' );
-		container.oncontextmenu = function() { return false; }
-        container.style.background = id==0 ? "rgba(0,0,0,0)" : background;
-        container.style.boxSizing = "border-box";
-        container.style.transition = "none";
-		container.id = drawingCanvas[id].id;
-
         // create canvas
         var canvas = document.createElement( 'canvas' );
-        canvas.style.boxSizing = "border-box";
-		canvas.style.width  = width + "px";
-		canvas.style.height = height + "px";
-        canvas.width  = width  * canvasScale;
-		canvas.height = height * canvasScale;
-		canvas.setAttribute( 'data-chalkboard', id );
-        canvas.style.border = "1px solid transparent";
-		container.appendChild( canvas );
+		canvas.classList.add( 'overlay' );
+		canvas.setAttribute( 'data-prevent-swipe', '' );
+        canvas.style.background = id==0 ? "rgba(0,0,0,0)" : background;
+        canvas.style.boxSizing  = "border-box";
+        canvas.style.transition = "none";
+        canvas.style.border     = "1px solid transparent";
+		canvas.style.width      = width + "px";
+		canvas.style.height     = height + "px";
+        canvas.width            = width  * canvasScale;
+		canvas.height           = height * canvasScale;
 
-        // highDPI scaling
+        // setup highDPI scaling & draw style
         var ctx = canvas.getContext("2d");
         ctx.scale(canvasScale, canvasScale);
-
-        // initial draw style
         ctx.lineCap   = 'round';
         ctx.lineWidth = 2;
 
         // store relevant information
         drawingCanvas[id].canvas    = canvas;
         drawingCanvas[id].context   = ctx;
-        drawingCanvas[id].container = container;
         drawingCanvas[id].width     = width;
         drawingCanvas[id].height    = height;
 
-        // do not propagate double-click to prevent zooming in by cg-zoom plugin
+        // prevent context menu and double-click
+		canvas.oncontextmenu = function() { return false; }
         canvas.ondblclick = function(evt) { 
             evt.preventDefault(); 
             evt.stopPropagation();
@@ -220,18 +206,18 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
 		if ( id == "0" )
         {
-			container.style.zIndex = "34";
-			container.classList.add( 'visible' )
-			container.style.pointerEvents = "none";
+			canvas.style.zIndex = "34";
+			canvas.classList.add( 'visible' )
+			canvas.style.pointerEvents = "none";
 		}
 		else
         {
-			container.style.zIndex = "36";
+			canvas.style.zIndex = "36";
 		}
 
 
         // add div to reveal.slides
-		document.querySelector( '.reveal .slides' ).appendChild( container );
+		document.querySelector( '.reveal .slides' ).appendChild( canvas );
 	}
 
 
@@ -269,7 +255,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
                 {
 					if ( drawingCanvas[id].width != storage[id].width || drawingCanvas[id].height != storage[id].height )
                     {
-                        console.warn("chalkboard: loaded data does not match width/height");
+                        alert("Chalkboard: Loaded data does not match width/height of presentation");
 					}
 				}
 			}
@@ -561,7 +547,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         mode         = 1;
         boardMode    = true;
 
-        drawingCanvas[1].container.classList.add( 'visible' );
+        drawingCanvas[1].canvas.classList.add( 'visible' );
         //chalkboard.style.pointerEvents = "auto";
     }
 
@@ -577,7 +563,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         mode         = 0;
         boardMode    = false;
 
-        drawingCanvas[1].container.classList.remove( 'visible' );
+        drawingCanvas[1].canvas.classList.remove( 'visible' );
         //chalkboard.style.pointerEvents = "none";
     }
 
@@ -1206,6 +1192,15 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 	};
 
 
+    function pdfExport()
+    {
+        if (confirm("Leave/reload presentation to export PDF?"))
+        {
+            window.open("?print-pdf","_self")
+        }
+    }
+
+
     function drawUndo()
     {
         if (hasSlideData( slideIndices, mode ))
@@ -1215,6 +1210,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
             startPlayback( mode );
         }
     }
+
 
     // setup keyboard shortcuts
     Reveal.addKeyBinding( { keyCode: 46, key: 'Delete', 
@@ -1244,6 +1240,10 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     Reveal.addKeyBinding( { keyCode: 90, key: 'Z', 
         description: 'Chalkboard Undo' }, 
         drawUndo );
+
+    Reveal.addKeyBinding( { keyCode: 80, key: 'P', 
+        description: 'Trigger Print/PDF-Export' }, 
+        pdfExport );
 
 	this.drawUndo          = drawUndo;
 	this.toggleChalkboard  = toggleChalkboard;
