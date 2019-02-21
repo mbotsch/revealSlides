@@ -737,8 +737,10 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         slideRect  = slides.getBoundingClientRect();
 
         // convert pointer/touch position to local coordiantes
-        var mouseX = (evt.clientX - slideRect.left) / slideScale;
-        var mouseY = (evt.clientY - slideRect.top ) / slideScale;
+        //var mouseX = (evt.clientX - slideRect.left) / slideScale;
+        //var mouseY = (evt.clientY - slideRect.top ) / slideScale;
+        var mouseX = evt.offsetX;
+        var mouseY = evt.offsetY;
 
         // compensate for CSS-zoom
         mouseX = mouseX / slideZoom;
@@ -787,8 +789,10 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
             evt.stopPropagation();
 
             // convert touch position to mouse position
-            var mouseX = (evt.clientX - slideRect.left) / slideScale;
-            var mouseY = (evt.clientY - slideRect.top ) / slideScale;
+            //var mouseX = (evt.clientX - slideRect.left) / slideScale;
+            //var mouseY = (evt.clientY - slideRect.top ) / slideScale;
+            var mouseX = evt.offsetX;
+            var mouseY = evt.offsetY;
 
             // compensate for CSS-zoom
             mouseX = mouseX / slideZoom;
