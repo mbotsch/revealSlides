@@ -14,22 +14,22 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     var DEBUG = false;
 
     var path = scriptPath();
-	function scriptPath()
+    function scriptPath()
     {
-		// obtain plugin path from the script element
-		var src;
-		if (document.currentScript) {
-			src = document.currentScript.src;
-		} else {
-			var sel = document.querySelector('script[src$="/chalkboard.js"]')
-			if (sel) {
-				src = sel.src;
-			}
-		}
+        // obtain plugin path from the script element
+        var src;
+        if (document.currentScript) {
+            src = document.currentScript.src;
+        } else {
+            var sel = document.querySelector('script[src$="/chalkboard.js"]')
+            if (sel) {
+                src = sel.src;
+            }
+        }
 
-		var path = typeof src === undefined ? src
-			: src.slice(0, src.lastIndexOf("/") + 1);
-		return path;
+        var path = typeof src === undefined ? src
+            : src.slice(0, src.lastIndexOf("/") + 1);
+        return path;
     }
 
 
@@ -45,8 +45,8 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
     // handle CSS zoom (Chrome), CSS scale (others), and highDPI/retina scale
     // (has to be updated later on, i.e., after reveal layout)
-	var reveal      = document.querySelector( '.reveal' );
-	var slides      = document.querySelector( '.reveal .slides' );
+    var reveal      = document.querySelector( '.reveal' );
+    var slides      = document.querySelector( '.reveal .slides' );
     var slideZoom   = slides.style.zoom || 1;
     var slideScale  = Reveal.getScale();
     var slideRect   = slides.getBoundingClientRect();
@@ -77,7 +77,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     laser.style.visibility = "hidden";
     laser.style.position   = "absolute";
     laser.style.zIndex     = 40;
-	laser.oncontextmenu = function() { return false; }
+    laser.oncontextmenu = function() { return false; }
     reveal.appendChild( laser );
 
 
@@ -93,34 +93,34 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
      ** Setup
      ******************************************************************/
 
-	function whenReady( callback )
+    function whenReady( callback )
     {
-		// wait for drawings to be loaded and markdown to be parsed
-		if ( loaded == null || document.querySelector('section[data-markdown]:not([data-markdown-parsed])') ) {
-			setTimeout( whenReady, 100, callback )
-		}
-		else {
-			callback();
-		}
-	}
+        // wait for drawings to be loaded and markdown to be parsed
+        if ( loaded == null || document.querySelector('section[data-markdown]:not([data-markdown-parsed])') ) {
+            setTimeout( whenReady, 100, callback )
+        }
+        else {
+            callback();
+        }
+    }
 
 
     // create button on the left side
     function createButton(left, bottom, icon)
     {
-		var b = document.createElement( 'div' );
-		b.style.position = "absolute";
-		b.style.zIndex   = 40;
-		b.style.left     = left + "px";
-		b.style.bottom   = bottom + "px";  
-		b.style.top      = "auto";
-		b.style.right    = "auto";
-		b.style.fontSize = "16px";
-		b.style.padding  = "3px";
-		b.style.borderRadius = "3px";
+        var b = document.createElement( 'div' );
+        b.style.position = "absolute";
+        b.style.zIndex   = 40;
+        b.style.left     = left + "px";
+        b.style.bottom   = bottom + "px";  
+        b.style.top      = "auto";
+        b.style.right    = "auto";
+        b.style.fontSize = "16px";
+        b.style.padding  = "3px";
+        b.style.borderRadius = "3px";
         b.style.color    = "lightgrey";
-		b.innerHTML      = '<i class="' + icon + '"></i>';
-		reveal.appendChild(b);
+        b.innerHTML      = '<i class="' + icon + '"></i>';
+        reveal.appendChild(b);
         return b;
     }
 
@@ -149,39 +149,39 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     buttonPen.onmousedown = function(){ pktimer = setTimeout(function(){pk.open();}, 500); }
 
 
-	var drawingCanvas = [ {id: "notescanvas" }, {id: "chalkboard" } ];
-	setupDrawingCanvas(0);
-	setupDrawingCanvas(1);
-	var mode = 0; // 0: draw on slides, 1: draw on whiteboard
+    var drawingCanvas = [ {id: "notescanvas" }, {id: "chalkboard" } ];
+    setupDrawingCanvas(0);
+    setupDrawingCanvas(1);
+    var mode = 0; // 0: draw on slides, 1: draw on whiteboard
 
-	var mouseX = 0;
-	var mouseY = 0;
-	var xLast = null;
-	var yLast = null;
+    var mouseX = 0;
+    var mouseY = 0;
+    var xLast = null;
+    var yLast = null;
 
-	var slideIndices =  { h:0, v:0 };
+    var slideIndices =  { h:0, v:0 };
     var activeStroke = null;
 
 
     // generate one of the two canvases
-	function setupDrawingCanvas( id )
+    function setupDrawingCanvas( id )
     {
         // size of slides
-		var width  = Reveal.getConfig().width;
-		var height = Reveal.getConfig().height;
+        var width  = Reveal.getConfig().width;
+        var height = Reveal.getConfig().height;
 
         // create canvas
         var canvas = document.createElement( 'canvas' );
-		canvas.classList.add( 'overlay' );
-		canvas.setAttribute( 'data-prevent-swipe', '' );
+        canvas.classList.add( 'overlay' );
+        canvas.setAttribute( 'data-prevent-swipe', '' );
         canvas.style.background = id==0 ? "rgba(0,0,0,0)" : background;
         canvas.style.boxSizing  = "border-box";
         canvas.style.transition = "none";
         canvas.style.border     = "1px solid transparent";
-		canvas.style.width      = width + "px";
-		canvas.style.height     = height + "px";
+        canvas.style.width      = width + "px";
+        canvas.style.height     = height + "px";
         canvas.width            = width  * canvasScale;
-		canvas.height           = height * canvasScale;
+        canvas.height           = height * canvasScale;
 
         // setup highDPI scaling & draw style
         var ctx = canvas.getContext("2d");
@@ -196,7 +196,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         drawingCanvas[id].height    = height;
 
         // prevent context menu and double-click
-		canvas.oncontextmenu = function() { return false; }
+        canvas.oncontextmenu = function() { return false; }
         canvas.ondblclick = function(evt) { 
             evt.preventDefault(); 
             evt.stopPropagation();
@@ -204,139 +204,139 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         }
 
 
-		if ( id == "0" )
+        if ( id == "0" )
         {
-			canvas.style.zIndex = "34";
-			canvas.classList.add( 'visible' )
-			canvas.style.pointerEvents = "none";
-		}
-		else
+            canvas.style.zIndex = "34";
+            canvas.classList.add( 'visible' )
+            canvas.style.pointerEvents = "none";
+        }
+        else
         {
-			canvas.style.zIndex = "36";
-		}
+            canvas.style.zIndex = "36";
+        }
 
 
         // add div to reveal.slides
-		document.querySelector( '.reveal .slides' ).appendChild( canvas );
-	}
+        document.querySelector( '.reveal .slides' ).appendChild( canvas );
+    }
 
 
     /*****************************************************************
      ** Storage
      ******************************************************************/
-	var storage = [
-		{ width: drawingCanvas[0].width,
+    var storage = [
+        { width: drawingCanvas[0].width,
           height: drawingCanvas[0].height,
           data: []},
-		{ width: drawingCanvas[1].width,
+        { width: drawingCanvas[1].width,
           height: drawingCanvas[1].height,
           data: []}
-	];
+    ];
 
 
-	var loaded = null;
-	if ( config.src != null )
+    var loaded = null;
+    if ( config.src != null )
     {
-		loadData( config.src );
-	}
+        loadData( config.src );
+    }
 
 
-	/**
-	 * Load data.
-	 */
-	function loadData( filename )
+    /**
+     * Load data.
+     */
+    function loadData( filename )
     {
         var xhr = new XMLHttpRequest();
-		xhr.onload = function()
+        xhr.onload = function()
         {
-			if (xhr.readyState === 4) {
-				storage = JSON.parse(xhr.responseText);
-				for (var id = 0; id < storage.length; id++)
+            if (xhr.readyState === 4) {
+                storage = JSON.parse(xhr.responseText);
+                for (var id = 0; id < storage.length; id++)
                 {
-					if ( drawingCanvas[id].width != storage[id].width || drawingCanvas[id].height != storage[id].height )
+                    if ( drawingCanvas[id].width != storage[id].width || drawingCanvas[id].height != storage[id].height )
                     {
                         alert("Chalkboard: Loaded data does not match width/height of presentation");
-					}
-				}
-			}
-			else
+                    }
+                }
+            }
+            else
             {
-				console.warn( 'Failed to get file ' + filename +". ReadyState: " + xhr.readyState + ", Status: " + xhr.status);
-			}
+                console.warn( 'Failed to get file ' + filename +". ReadyState: " + xhr.readyState + ", Status: " + xhr.status);
+            }
             loaded = true;
-		};
+        };
 
         xhr.open( 'GET', filename, true );
-		try {
-			xhr.send();
-		}
-		catch ( error ) {
-			console.warn( 'Failed to get file ' + filename + '. Make sure that the presentation and the file are served by a HTTP server and the file can be found there. ' + error );
-		}
-	}
+        try {
+            xhr.send();
+        }
+        catch ( error ) {
+            console.warn( 'Failed to get file ' + filename + '. Make sure that the presentation and the file are served by a HTTP server and the file can be found there. ' + error );
+        }
+    }
 
-	/**
-	 * Download data.
-	 */
-	function downloadData()
+    /**
+     * Download data.
+     */
+    function downloadData()
     {
-		var a = document.createElement('a');
-		document.body.appendChild(a);
-		try {
-			var url = location.pathname;
+        var a = document.createElement('a');
+        document.body.appendChild(a);
+        try {
+            var url = location.pathname;
             var basename = (url.split('\\').pop().split('/').pop().split('.'))[0];
             var filename = basename + ".json";
             a.download = filename;
-			var blob = new Blob( [ JSON.stringify( storage ) ], { type: "application/json"} );
-			a.href = window.URL.createObjectURL( blob );
-		} catch( error ) {
-			a.innerHTML += " (" + error + ")";
-		}
-		a.click();
-		document.body.removeChild(a);
+            var blob = new Blob( [ JSON.stringify( storage ) ], { type: "application/json"} );
+            a.href = window.URL.createObjectURL( blob );
+        } catch( error ) {
+            a.innerHTML += " (" + error + ")";
+        }
+        a.click();
+        document.body.removeChild(a);
 
         needSave = false;
-	}
+    }
 
 
-	/**
-	 * Returns data object for the slide with the given indices.
-	 */
-	function getSlideData( indices, id )
+    /**
+     * Returns data object for the slide with the given indices.
+     */
+    function getSlideData( indices, id )
     {
-		if ( id == undefined ) id = mode;
-		if (!indices) indices = slideIndices;
-		for (var i = 0; i < storage[id].data.length; i++)
+        if ( id == undefined ) id = mode;
+        if (!indices) indices = slideIndices;
+        for (var i = 0; i < storage[id].data.length; i++)
         {
-			if (storage[id].data[i].slide.h === indices.h &&
+            if (storage[id].data[i].slide.h === indices.h &&
                 storage[id].data[i].slide.v === indices.v &&
                 storage[id].data[i].slide.f === indices.f )
             {
-				return storage[id].data[i];
-			}
-		}
+                return storage[id].data[i];
+            }
+        }
 
         // no data found -> add it
-		storage[id].data.push( { slide: indices, events: [] } );
-		return storage[id].data[storage[id].data.length-1];
-	}
+        storage[id].data.push( { slide: indices, events: [] } );
+        return storage[id].data[storage[id].data.length-1];
+    }
 
 
     // do we have slide data?
-	function hasSlideData( indices, id )
+    function hasSlideData( indices, id )
     {
-		if ( id == undefined ) id = mode;
-		if (!indices) indices = slideIndices;
-		for (var i = 0; i < storage[id].data.length; i++)
+        if ( id == undefined ) id = mode;
+        if (!indices) indices = slideIndices;
+        for (var i = 0; i < storage[id].data.length; i++)
         {
-			if (storage[id].data[i].slide.h === indices.h &&
+            if (storage[id].data[i].slide.h === indices.h &&
                 storage[id].data[i].slide.v === indices.v &&
                 storage[id].data[i].slide.f === indices.f )
             {
-				return storage[id].data[i].events.length > 0;
-			}
-		}
-		return false;
+                return storage[id].data[i].events.length > 0;
+            }
+        }
+        return false;
     }
 
 
@@ -355,12 +355,12 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     /*****************************************************************
      ** Print
      ******************************************************************/
-	var printMode = ( /print-pdf/gi ).test( window.location.search );
+    var printMode = ( /print-pdf/gi ).test( window.location.search );
 
-	function createPrintout( )
+    function createPrintout( )
     {
         // MARIO: we want to print the drawings
-		//drawingCanvas[0].container.classList.remove( 'visible' ); // do not print notes canvas
+        //drawingCanvas[0].container.classList.remove( 'visible' ); // do not print notes canvas
 
         var nextSlide = [];
         var width   = Reveal.getConfig().width;
@@ -461,53 +461,53 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     }
 
 
-	function addPrintout( parent, nextSlide, imgCanvas )
+    function addPrintout( parent, nextSlide, imgCanvas )
     {
-		var slideCanvas = document.createElement('canvas');
-		slideCanvas.width = Reveal.getConfig().width;
-		slideCanvas.height = Reveal.getConfig().height;
-		var ctx = slideCanvas.getContext("2d");
-		ctx.fillStyle = "white";
-		ctx.rect(0,0,slideCanvas.width,slideCanvas.height);
-		ctx.fill();
-		ctx.drawImage(imgCanvas, 0, 0);
+        var slideCanvas = document.createElement('canvas');
+        slideCanvas.width = Reveal.getConfig().width;
+        slideCanvas.height = Reveal.getConfig().height;
+        var ctx = slideCanvas.getContext("2d");
+        ctx.fillStyle = "white";
+        ctx.rect(0,0,slideCanvas.width,slideCanvas.height);
+        ctx.fill();
+        ctx.drawImage(imgCanvas, 0, 0);
 
-		var newSlide = document.createElement( 'section' );
-		newSlide.classList.add( 'present' );
-		newSlide.innerHTML = '<h1 style="visibility:hidden">Drawing</h1>';
-		newSlide.setAttribute("data-background-size", '100% 100%' );
-		newSlide.setAttribute("data-background-repeat", 'norepeat' );
-		newSlide.setAttribute("data-background", 'url("' + slideCanvas.toDataURL("image/png") +'")' );
-		if ( nextSlide != null ) {
-			parent.insertBefore( newSlide, nextSlide );
-		}
-		else {
-			parent.append( newSlide );
-		}
-	}
+        var newSlide = document.createElement( 'section' );
+        newSlide.classList.add( 'present' );
+        newSlide.innerHTML = '<h1 style="visibility:hidden">Drawing</h1>';
+        newSlide.setAttribute("data-background-size", '100% 100%' );
+        newSlide.setAttribute("data-background-repeat", 'norepeat' );
+        newSlide.setAttribute("data-background", 'url("' + slideCanvas.toDataURL("image/png") +'")' );
+        if ( nextSlide != null ) {
+            parent.insertBefore( newSlide, nextSlide );
+        }
+        else {
+            parent.append( newSlide );
+        }
+    }
 
 
     /*****************************************************************
      ** Drawings
      ******************************************************************/
 
-	function draw(context, fromX, fromY, toX, toY)
+    function draw(context, fromX, fromY, toX, toY)
     {
-		context.beginPath();
-  		context.moveTo(fromX, fromY);
-  		context.lineTo(toX, toY);
+        context.beginPath();
+        context.moveTo(fromX, fromY);
+        context.lineTo(toX, toY);
         context.stroke();
-	}
+    }
 
-	function erase(context,x,y)
+    function erase(context,x,y)
     {
-		context.save();
-		context.beginPath();
-		context.arc(x, y, eraserRadius, 0, 2 * Math.PI, false);
-		context.clip();
-		context.clearRect(x-eraserRadius, y-eraserRadius, eraserRadius*2, eraserRadius*2);
-		context.restore();
-	}
+        context.save();
+        context.beginPath();
+        context.arc(x, y, eraserRadius, 0, 2 * Math.PI, false);
+        context.clip();
+        context.clearRect(x-eraserRadius, y-eraserRadius, eraserRadius*2, eraserRadius*2);
+        context.restore();
+    }
 
 
     function showLaser(evt)
@@ -536,9 +536,9 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     }
 
 
-	/**
-	 * Opens an overlay for the chalkboard.
-	 */
+    /**
+     * Opens an overlay for the chalkboard.
+     */
     function showChalkboard()
     {
         xLast        = null;
@@ -552,9 +552,9 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     }
 
 
-	/**
-	 * Closes open chalkboard.
-	 */
+    /**
+     * Closes open chalkboard.
+     */
     function closeChalkboard()
     {
         xLast        = null;
@@ -571,74 +571,74 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     /*
      * Toggle chalkboard visibility
      */
-	function toggleChalkboard()
+    function toggleChalkboard()
     {
-		if ( boardMode )
+        if ( boardMode )
         {
-			closeChalkboard();
-		}
-		else
+            closeChalkboard();
+        }
+        else
         {
-			showChalkboard();
-		}
+            showChalkboard();
+        }
         updateGUI();
-	};
+    };
 
 
 
 
-	/**
-	 * Clear current canvas.
-	 */
-	function clearCanvas( id )
+    /**
+     * Clear current canvas.
+     */
+    function clearCanvas( id )
     {
-		drawingCanvas[id].context.clearRect(0,0,drawingCanvas[id].width,drawingCanvas[id].height);
-	}
+        drawingCanvas[id].context.clearRect(0,0,drawingCanvas[id].width,drawingCanvas[id].height);
+    }
 
 
     /*****************************************************************
      ** record and play-back events
      ******************************************************************/
 
-	function recordEvent( event )
+    function recordEvent( event )
     {
-		var slideData = getSlideData();
+        var slideData = getSlideData();
         slideData.events.push(event);
         needSave = true;
-	}
+    }
 
 
-	function startPlayback( finalMode )
+    function startPlayback( finalMode )
     {
         closeChalkboard();
         mode = 0;
         for ( var id = 0; id < 2; id++ )
         {
-			clearCanvas( id );
+            clearCanvas( id );
 
             /* MARIO: don't just call getSlideData, since it pushed slide data when nothing is found
                which somehow inserts black slides for printing */
             if (hasSlideData( slideIndices, id ))
             {
-			    var slideData = getSlideData( slideIndices, id );
-			    var index = 0;
-			    while ( index < slideData.events.length )
+                var slideData = getSlideData( slideIndices, id );
+                var index = 0;
+                while ( index < slideData.events.length )
                 {
-				    playEvent( id, slideData.events[index] );
-				    index++;
-			    }
-		    }
+                    playEvent( id, slideData.events[index] );
+                    index++;
+                }
+            }
         }
 
         if ( finalMode != undefined )
         {
             mode = finalMode;
         }
-		if( mode == 1 ) showChalkboard();
-	};
+        if( mode == 1 ) showChalkboard();
+    };
 
 
-	function playEvent( id, event )
+    function playEvent( id, event )
     {
         switch ( event.type )
         {
@@ -655,9 +655,9 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     };
 
 
-	function drawCurve( id, event )
+    function drawCurve( id, event )
     {
-		var ctx = drawingCanvas[id].context;
+        var ctx = drawingCanvas[id].context;
 
         // old syntax
         if (event.curve)
@@ -685,27 +685,27 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
                 draw(ctx, event.coords[i  ], event.coords[i+1],
                           event.coords[i+2], event.coords[i+3]);
         }
-	};
+    };
 
 
-	function eraseCurve( id, event )
+    function eraseCurve( id, event )
     {
         var ctx = drawingCanvas[id].context;
 
         // old syntax
         if (event.curve)
         {
-			for (var i=0; i<event.curve.length; i++)
+            for (var i=0; i<event.curve.length; i++)
                 erase(ctx, event.curve[i].x, event.curve[i].y);
-		}
+        }
         // new syntax
         else if (event.coords)
         {
-			for (var i=0; i<event.coords.length-1; i+=2)
+            for (var i=0; i<event.coords.length-1; i+=2)
                 erase(ctx, event.coords[i], event.coords[i+1]);
         }
 
-	};
+    };
 
 
     /*****************************************************************
@@ -719,12 +719,8 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
         // update scale, zoom, and bounding rectangle
         slideZoom  = slides.style.zoom || 1;
-        slideScale = Reveal.getScale();
-        slideRect  = slides.getBoundingClientRect();
 
         // convert pointer/touch position to local coordiantes
-        //var mouseX = (evt.clientX - slideRect.left) / slideScale;
-        //var mouseY = (evt.clientY - slideRect.top ) / slideScale;
         var mouseX = evt.offsetX;
         var mouseY = evt.offsetY;
 
@@ -948,40 +944,68 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     // no pointer events
     else
     {
-        document.addEventListener( 'mousedown', function(evt) {
-            if (evt.target.getAttribute('data-chalkboard') == mode)
+        slides.addEventListener( 'mousedown', function(evt) {
+            switch(tool)
             {
-                startStroke(evt);
-            }
-        }, true );
+                case ToolType.PEN:
+                case ToolType.ERASER:
+                    startStroke(evt);
+                    break;
 
-
-        document.addEventListener( 'mousemove', function(evt) {
-            if (evt.target.getAttribute('data-chalkboard') == mode)
-            {
-                continueStroke(evt);
+                case ToolType.LASER:
+                    slides.style.cursor = laserCursor;
+                    break;
             }
         });
 
 
-        document.addEventListener( 'mouseup', function(evt) {
-            if (evt.target.getAttribute('data-chalkboard') == mode)
+        slides.addEventListener( 'mousemove', function(evt) {
+            switch(tool)
             {
-                stopStroke(evt);
+                case ToolType.PEN:
+                case ToolType.ERASER:
+                    continueStroke(evt);
+                    break;
+
+                case ToolType.LASER:
+                    break;
+            }
+        });
+
+
+        slides.addEventListener( 'mouseup', function(evt) {
+            switch(tool)
+            {
+                case ToolType.PEN:
+                case ToolType.ERASER:
+                    stopStroke(evt);
+                    break;
+
+                case ToolType.LASER:
+                    slides.style.cursor = 'none';
+                    break;
             }
         });
 
 
         slides.addEventListener( 'touchstart', function(evt) {
-            // iPad pencil -> draw
-            for (let t of evt.targetTouches) 
+            if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
             {
-                if (t.touchType == "stylus")
+                // iPad pencil -> draw
+                for (let t of evt.targetTouches) 
                 {
-                    evt.clientX = t.clientX;
-                    evt.clientY = t.clientY;
-                    startStroke(evt);
-                    return;
+                    if (t.touchType == "stylus")
+                    {
+                        if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
+                        {
+                            slideScale  = Reveal.getScale();
+                            slideRect   = slides.getBoundingClientRect();
+                            evt.offsetX = (t.clientX - slideRect.left) / slideScale;
+                            evt.offsetY = (t.clientY - slideRect.top ) / slideScale;
+                            startStroke(evt);
+                            return;
+                        }
+                    }
                 }
             }
 
@@ -994,15 +1018,18 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
 
         slides.addEventListener( 'touchmove', function(evt) {
-            // iPad pencil -> draw
-            for (let t of evt.changedTouches) 
+            if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
             {
-                if (t.touchType == "stylus")
+                // iPad pencil -> draw
+                for (let t of evt.changedTouches) 
                 {
-                    evt.clientX = t.clientX;
-                    evt.clientY = t.clientY;
-                    continueStroke(evt);
-                    return;
+                    if (t.touchType == "stylus")
+                    {
+                        evt.offsetX = (t.clientX - slideRect.left) / slideScale;
+                        evt.offsetY = (t.clientY - slideRect.top ) / slideScale;
+                        continueStroke(evt);
+                        return;
+                    }
                 }
             }
 
@@ -1016,15 +1043,16 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
 
         slides.addEventListener( 'touchend', function(evt) {
-            // iPad pencil -> draw
-            for (let t of evt.changedTouches) 
+            if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
             {
-                if (t.touchType == "stylus")
+                // iPad pencil -> draw
+                for (let t of evt.changedTouches) 
                 {
-                    evt.clientX = t.clientX;
-                    evt.clientY = t.clientY;
-                    stopStroke(evt);
-                    return;
+                    if (t.touchType == "stylus")
+                    {
+                        stopStroke(evt);
+                        return;
+                    }
                 }
             }
 
@@ -1049,54 +1077,54 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
 
     window.addEventListener( "resize", function() {
-		// Resize the canvas and draw everything again
-		startPlayback( mode );
-	} );
+        // Resize the canvas and draw everything again
+        startPlayback( mode );
+    } );
 
 
-	Reveal.addEventListener( 'ready', function( evt ) {
-		if ( !printMode ) {
-			slideIndices = Reveal.getIndices();
+    Reveal.addEventListener( 'ready', function( evt ) {
+        if ( !printMode ) {
+            slideIndices = Reveal.getIndices();
             startPlayback( 0 );
-		}
-		else {
-			whenReady( createPrintout );
-		}
-	});
+        }
+        else {
+            whenReady( createPrintout );
+        }
+    });
 
 
     Reveal.addEventListener( 'slidechanged', function( evt ) {
-		if ( !printMode ) {
-			slideIndices = Reveal.getIndices();
-			closeChalkboard();
-			clearCanvas( 0 );
-			clearCanvas( 1 );
+        if ( !printMode ) {
+            slideIndices = Reveal.getIndices();
+            closeChalkboard();
+            clearCanvas( 0 );
+            clearCanvas( 1 );
             startPlayback( 0 );
-		}
-	});
+        }
+    });
 
 
     Reveal.addEventListener( 'fragmentshown', function( evt ) {
-		if ( !printMode ) {
-			slideIndices = Reveal.getIndices();
-			closeChalkboard();
-			clearCanvas( 0 );
-			clearCanvas( 1 );
+        if ( !printMode ) {
+            slideIndices = Reveal.getIndices();
+            closeChalkboard();
+            clearCanvas( 0 );
+            clearCanvas( 1 );
             startPlayback( 0 );
-		}
-	});
+        }
+    });
 
 
     Reveal.addEventListener( 'fragmenthidden', function( evt ) {
-		if ( !printMode ) {
-			slideIndices = Reveal.getIndices();
-			closeChalkboard();
-			clearCanvas( 0 );
+        if ( !printMode ) {
+            slideIndices = Reveal.getIndices();
+            closeChalkboard();
+            clearCanvas( 0 );
             clearCanvas( 1 );
             startPlayback();
             closeChalkboard();
-		}
-	});
+        }
+    });
 
 
 
@@ -1111,7 +1139,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     // check whether slide has blackboard scribbles, and then highlight icon
     function updateGUI()
     {
-		if (printMode) return;
+        if (printMode) return;
 
 
         // reset icon states
@@ -1170,26 +1198,26 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
 
 
-	function clearSlide()
+    function clearSlide()
     {
-		var ok = confirm("Delete notes and board on this slide?");
-		if ( ok )
+        var ok = confirm("Delete notes and board on this slide?");
+        if ( ok )
         {
-			activeStroke = null;
-			closeChalkboard();
+            activeStroke = null;
+            closeChalkboard();
 
-			clearCanvas( 0 );
-			clearCanvas( 1 );
+            clearCanvas( 0 );
+            clearCanvas( 1 );
 
-			mode = 1;
-			var slideData = getSlideData();
-			slideData.events = [];
+            mode = 1;
+            var slideData = getSlideData();
+            slideData.events = [];
 
-			mode = 0;
-			var slideData = getSlideData();
-			slideData.events = [];
-		}
-	};
+            mode = 0;
+            var slideData = getSlideData();
+            slideData.events = [];
+        }
+    };
 
 
     function pdfExport()
@@ -1245,11 +1273,11 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         description: 'Trigger Print/PDF-Export' }, 
         pdfExport );
 
-	this.drawUndo          = drawUndo;
-	this.toggleChalkboard  = toggleChalkboard;
-	this.clearSlide        = clearSlide;
-	this.download          = downloadData;
+    this.drawUndo          = drawUndo;
+    this.toggleChalkboard  = toggleChalkboard;
+    this.clearSlide        = clearSlide;
+    this.download          = downloadData;
 
-	return this;
+    return this;
 })();
 
