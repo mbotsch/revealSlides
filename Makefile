@@ -22,7 +22,7 @@ endif
 
 ###  EXPLICIT RULES  ##########################################################
 
-.PHONY: html build serve
+.PHONY: clean html build serve
 
 html: $(HTML)
 
@@ -35,7 +35,7 @@ clean:
 ###  IMPLICIT RULES  ##########################################################
 
 
-%.html: %.md
+%.html: %.md $(TEMPLATE) $(MACROS)
 	m4 $(MACROS) $< | \
 	pandoc \
 	--from markdown+emoji+smart \
