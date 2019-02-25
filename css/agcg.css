@@ -190,6 +190,17 @@ body {
 	color: #2a9ddf;
 }
 
+.reveal .color-darkred {
+    color: #990000;
+}
+
+.reveal .strike {
+  text-decoration: line-through;
+}
+.reveal .smallcaps {
+  font-variant: small-caps;
+}
+
 .reveal b {
     font-weight: bold; }
 
