@@ -54,7 +54,7 @@ build:
 	rm -rf build/
 	cp -r public/ build/
 	rm build/images
-	rm build/slide-system
+	rm build/revealSlides
 	rm build/videos
 	rm build/demos
 	rsync -r --stats $(REVEAL) demos videos images build/ --include-from $(REVEAL)/deploy.txt
