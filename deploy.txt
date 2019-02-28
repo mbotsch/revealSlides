@@ -1,6 +1,7 @@
 + images/***
 + demos/***
 + videos/***
++ animations/***
 + revealSlides/
 + revealSlides/cg-chalkboard/***
 + revealSlides/cg-highlight/***
