@@ -53,12 +53,12 @@ clean:
 build:
 	rm -rf build/
 	cp -r public/ build/
-	rm build/animations
-	rm build/css
-	rm build/demos
-	rm build/images
-	rm build/$(REVEAL)
-	rm build/videos
+	rm -f build/animations
+	rm -f build/css
+	rm -f build/demos
+	rm -f build/images
+	rm -f build/$(REVEAL)
+	rm -f build/videos
 	rsync -r --stats $(REVEAL) animations css demos videos images build/ --include-from $(REVEAL)/deploy.txt
 
 
