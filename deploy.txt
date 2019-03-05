@@ -22,10 +22,7 @@
 + revealSlides/MathJax/config/TeX-AMS_CHTML-full.js
 + revealSlides/MathJax/fonts/***
 + revealSlides/MathJax/extensions/
-+ revealSlides/MathJax/extensions/TeX/
-+ revealSlides/MathJax/extensions/TeX/color.js
-+ revealSlides/MathJax/extensions/TeX/fontdata.js
-+ revealSlides/MathJax/extensions/TeX/AMSmath.js
++ revealSlides/MathJax/extensions/TeX/***
 + revealSlides/MathJax/jax/
 + revealSlides/MathJax/jax/input/
 + revealSlides/MathJax/jax/input/TeX/***
