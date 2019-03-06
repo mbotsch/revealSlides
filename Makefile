@@ -22,7 +22,7 @@ endif
 
 ###  EXPLICIT RULES  ##########################################################
 
-.PHONY: clean html build serve
+.PHONY: clean html build serve serve_public
 
 html: $(HTML)
 
@@ -66,3 +66,7 @@ serve: build
 	sh -c "sleep 1; $(BROWSER) http://127.0.0.1:$(SERVE_PORT)" &
 	python3 -m http.server --bind 127.0.0.1 --directory build/
 
+
+serve_public: 
+	sh -c "sleep 1; $(BROWSER) http://127.0.0.1:$(SERVE_PORT)" &
+	python3 -m http.server --bind 127.0.0.1 --directory public/
