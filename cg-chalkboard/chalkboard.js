@@ -172,12 +172,14 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
         // create canvas
         var canvas = document.createElement( 'canvas' );
-        canvas.classList.add( 'overlay' );
         canvas.setAttribute( 'data-prevent-swipe', '' );
         canvas.style.background = id==0 ? "rgba(0,0,0,0)" : background;
         canvas.style.boxSizing  = "border-box";
         canvas.style.transition = "none";
         canvas.style.border     = "1px solid transparent";
+        canvas.style.position   = "absolute";
+        canvas.style.top        = "0px";
+        canvas.style.left       = "0px";
         canvas.style.width      = width + "px";
         canvas.style.height     = height + "px";
         canvas.width            = width  * canvasScale;
@@ -206,13 +208,16 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
         if ( id == "0" )
         {
+            canvas.id = 'drawOnSlides';
             canvas.style.zIndex = "34";
-            canvas.classList.add( 'visible' )
+            canvas.style.visibility = "visible";
             canvas.style.pointerEvents = "none";
         }
         else
         {
+            canvas.id = 'drawOnBoard';
             canvas.style.zIndex = "36";
+            canvas.style.visibility = "hidden";
         }
 
 
@@ -359,9 +364,6 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
     function createPrintout( )
     {
-        // MARIO: we want to print the drawings
-        //drawingCanvas[0].container.classList.remove( 'visible' ); // do not print notes canvas
-
         var nextSlide = [];
         var width   = Reveal.getConfig().width;
         var height  = Reveal.getConfig().height;
@@ -529,10 +531,6 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         evt.stopPropagation();
         laser.style.visibility = "hidden";
         slides.style.cursor = 'none';
-
-        // fire dummy mousemove event, so that reveal can trigger 
-        // the automatic hiding of inactive cursor
-        document.dispatchEvent(new MouseEvent("mousemove"));
     }
 
 
@@ -547,8 +545,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         mode         = 1;
         boardMode    = true;
 
-        drawingCanvas[1].canvas.classList.add( 'visible' );
-        //chalkboard.style.pointerEvents = "auto";
+        drawingCanvas[1].canvas.style.visibility = "visible";
     }
 
 
@@ -563,8 +560,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         mode         = 0;
         boardMode    = false;
 
-        drawingCanvas[1].canvas.classList.remove( 'visible' );
-        //chalkboard.style.pointerEvents = "none";
+        drawingCanvas[1].canvas.style.visibility = "hidden";
     }
 
 
@@ -820,11 +816,6 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
         // hide/reset cursor
         slides.style.cursor = 'none';
-
-        // fire dummy mousemove event, so that reveal can trigger 
-        // the automatic hiding of inactive cursor
-        var e = new MouseEvent("mousemove");
-        document.dispatchEvent(e);
     };
 
 
@@ -1187,7 +1178,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
 
         // hide mouse cursor if some tool is active
-        slides.style.cursor = tool ? 'none' : 'auto';
+        slides.style.cursor = tool ? 'none' : '';
     }
 
 
