@@ -247,6 +247,7 @@ $body$
       { src: '$template$/cg-chalkboard/chalkboard.js' }, // do not load this async, otherwise print wont work)
       { src: '$template$/cg-quiz/quiz.js', async: true },
 	  { src: '$template$/cg-highlight/highlight.js', async: true, callback: function() {
+        hljs.configure({languages:[]});
         var code_blocks = document.querySelectorAll('code');
         for( var i = 0, len = code_blocks.length; i < len; i++ )  hljs.highlightBlock(code_blocks[i]);
       }}
