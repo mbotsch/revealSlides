@@ -94,10 +94,11 @@ var RevealQuiz = (function(){
         var e = document.getElementById("quiz-qr");
         if (e)
         {
+            var size = parseInt(e.style.width, 10) || 300;
             var qrcode = new QRCode("quiz-qr", {
                 text:         server,
-                width:        300,
-                height:       300,
+                width:        size,
+                height:       size,
                 colorDark:    "#000000",
                 colorLight:   "#ffffff",
                 correctLevel: QRCode.CorrectLevel.H
