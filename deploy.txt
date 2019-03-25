@@ -26,7 +26,7 @@
 + revealSlides/MathJax/extensions/TeX/***
 + revealSlides/MathJax/jax/
 + revealSlides/MathJax/jax/input/
-+ revealSlides/MathJax/jax/element/*
++ revealSlides/MathJax/jax/element/***
 + revealSlides/MathJax/jax/input/TeX/***
 + revealSlides/MathJax/jax/output/
 + revealSlides/MathJax/jax/output/CommonHTML/***
