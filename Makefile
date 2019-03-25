@@ -59,7 +59,7 @@ build:
 	rm -f build/images
 	rm -f build/$(REVEAL)
 	rm -f build/videos
-	rsync -r --stats $(REVEAL) animations css demos videos images build/ --include-from $(REVEAL)/deploy.txt
+	rsync -r --stats $(REVEAL) animations meshes css demos videos images build/ --include-from $(REVEAL)/deploy.txt
 
 
 serve: build
