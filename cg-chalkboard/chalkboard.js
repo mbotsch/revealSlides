@@ -546,6 +546,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         boardMode    = true;
 
         drawingCanvas[1].canvas.style.visibility = "visible";
+        tool = ToolType.PEN;
     }
 
 
@@ -561,6 +562,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         boardMode    = false;
 
         drawingCanvas[1].canvas.style.visibility = "hidden";
+        tool = ToolType.NONE;
     }
 
 
