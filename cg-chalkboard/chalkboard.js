@@ -42,6 +42,8 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     var colors     = config.colors || [ "black", "red", "green", "blue", "yellow", "cyan", "magenta" ];
     var background = config.background || "white";
 
+    // bugfix for reveal.js needed
+    var pdfCreated=false;
 
     // handle CSS zoom (Chrome), CSS scale (others), and highDPI/retina scale
     // (has to be updated later on, i.e., after reveal layout)
@@ -364,6 +366,10 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
     function createPrintout( )
     {
+        // did we do this already? (reveal currently triggers 'ready' callback twice)
+        if (pdfCreated) { console.warn("createPrintout called a 2nd time. Should not happen!"); return; }
+        pdfCreated=true;
+        
         var nextSlide = [];
         var width   = Reveal.getConfig().width;
         var height  = Reveal.getConfig().height;
