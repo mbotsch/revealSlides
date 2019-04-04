@@ -58,8 +58,6 @@
     <!-- MathJax config -->
     <script type="text/x-mathjax-config">
       MathJax.Hub.Config({
-          jax: ["input/TeX","output/CommonHTML"],
-          extensions: ["TeX/AMSmath.js"],
           menuSettings: { zoom: "Double-Click" },
           styles: { ".reveal section .MJXc-display": { margin: "0.5em 0em 1em 0em" } },
           TeX: {
@@ -83,7 +81,6 @@
                 pdiff: ['\\frac{\\partial {#1}}{\\partial {#2}}', 2]
               }
           },
-          "CommonHTML": { matchFontHeight: false }
       });
     </script>
 
@@ -168,7 +165,7 @@ $body$
 
 
       // use local mathjax installation, use CommonHTML
-      math: { mathjax: '$template$/MathJax/MathJax.js', config: 'TeX-AMS_CHTML-full' },
+      math: { mathjax: '$template$/MathJax/MathJax.js' },
 
 
       // setup chalkboard
@@ -235,7 +232,6 @@ $body$
 
       // load plugins
 	  dependencies: [
-	  { src: '$template$/reveal.js/plugin/math/math.js' },
 	  { src: '$template$/reveal.js/plugin/notes/notes.js', async: true },
       { src: '$template$/reveal.js-menu/menu.js' },
       { src: '$template$/reveal.js-plugins/chart/Chart.min.js' },
@@ -243,7 +239,8 @@ $body$
       { src: '$template$/reveal.js/plugin/highlight/highlight.js', async: true },
       { src: '$template$/cg-zoom/zoom.js', async: true },
       { src: '$template$/cg-chalkboard/chalkboard.js' }, // do not load this async, otherwise print wont work)
-      { src: '$template$/cg-quiz/quiz.js', async: true }
+      { src: '$template$/cg-quiz/quiz.js', async: true },
+	  { src: '$template$/cg-math/math.js' }
       ]
 
 	  });
