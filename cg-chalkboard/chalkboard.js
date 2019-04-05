@@ -256,6 +256,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         var xhr = new XMLHttpRequest();
         xhr.onload = function()
         {
+            console.log("ready state: " + xhr.readyState);
             if (xhr.readyState === 4) {
                 storage = JSON.parse(xhr.responseText);
                 for (var id = 0; id < storage.length; id++)
@@ -366,6 +367,8 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
     function createPrintout( )
     {
+        console.log("chalkboard create printout");
+
         // did we do this already? (reveal currently triggers 'ready' callback twice)
         if (pdfCreated) { console.warn("createPrintout called a 2nd time. Should not happen!"); return; }
         pdfCreated=true;
@@ -1087,6 +1090,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
             startPlayback( 0 );
         }
         else {
+            console.log("chalkboard ready callback");
             whenReady( createPrintout );
         }
     });

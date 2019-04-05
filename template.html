@@ -159,7 +159,7 @@ $body$
       minScale:     0.2,
       maxScale:     5,
       pdfMaxPagesPerSlide: 1, // slides are cropped on one page for PDF export
-      pdfSeparateFragments: false, // otherwise slides with fragments and math do not work
+      pdfSeparateFragments: false,
 	  hideInactiveCursor: true,
 	  hideCursorTime: 3000,
 
@@ -232,15 +232,15 @@ $body$
 
       // load plugins
 	  dependencies: [
-	  { src: '$template$/reveal.js/plugin/notes/notes.js', async: true },
-      { src: '$template$/reveal.js-menu/menu.js' },
-      { src: '$template$/reveal.js-plugins/chart/Chart.min.js' },
-      { src: '$template$/reveal.js-plugins/chart/csv2chart.js' },
+      { src: '$template$/reveal.js-menu/menu.js', async: true },
+      { src: '$template$/reveal.js-plugins/chart/Chart.min.js', async: true },
+      { src: '$template$/reveal.js-plugins/chart/csv2chart.js', async: true },
       { src: '$template$/reveal.js/plugin/highlight/highlight.js', async: true },
+	  { src: '$template$/cg-math/math.js' },
+	  { src: '$template$/cg-notes/notes.js', async: true },
       { src: '$template$/cg-zoom/zoom.js', async: true },
-      { src: '$template$/cg-chalkboard/chalkboard.js' }, // do not load this async, otherwise print wont work)
+      { src: '$template$/cg-chalkboard/chalkboard.js', async: true }, 
       { src: '$template$/cg-quiz/quiz.js', async: true },
-	  { src: '$template$/cg-math/math.js' }
       ]
 
 	  });
