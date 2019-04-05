@@ -95,11 +95,7 @@ var RevealMath = window.RevealMath || (function(){
                 // resolve promise
                 if (!printMode) resolve();
             });
-		},
-
-        getMathJax: function() { return mathjax; },
-        getConfig: function() { return config; },
-        getURL: function() { return url; }
+		}
 	}
 
 })();

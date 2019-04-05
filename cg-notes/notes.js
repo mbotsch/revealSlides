@@ -26,15 +26,6 @@ var RevealNotes = (function() {
 			notesFilePath = jsFileLocation + 'notes.html';
 		}
 
-        if (Reveal.hasPlugin('math'))
-        {            
-            //var mathjax = "../../../../" + Reveal.getPlugin('math').getMathJax();
-            var mathjax = Reveal.getPlugin('math').getMathJax();
-            var config  = Reveal.getPlugin('math').getConfig();
-            notesFilePath += "?mathjax=" + mathjax;
-            notesFilePath += "?config="  + config;
-        }
-
 		notesPopup = window.open( notesFilePath, 'reveal.js - Notes', 'width=1100,height=700' );
 
 		if( !notesPopup ) {
@@ -136,6 +127,26 @@ var RevealNotes = (function() {
 
 		}
 
+
+        function sendMathJax()
+        {
+            if (Reveal.hasPlugin('math'))
+            {            
+                var mathjax = document.querySelector('script[src*="MathJax.js"]');
+                if (mathjax)
+                {
+                    var messageData = {
+                        namespace: 'reveal-notes',
+                        type: 'mathjax',
+                        mathjax: mathjax.src
+                    };
+
+                    notesPopup.postMessage( JSON.stringify( messageData ), '*' );
+                }
+            }
+        }
+
+
 		/**
 		 * Called once we have established a connection to the notes
 		 * window.
@@ -154,6 +165,8 @@ var RevealNotes = (function() {
 			// Post the initial state
 			post();
 
+            // Post information on MathJax URL and config
+            sendMathJax();
 		}
 
 		connect();

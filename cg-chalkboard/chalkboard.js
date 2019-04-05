@@ -256,7 +256,6 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         var xhr = new XMLHttpRequest();
         xhr.onload = function()
         {
-            console.log("ready state: " + xhr.readyState);
             if (xhr.readyState === 4) {
                 storage = JSON.parse(xhr.responseText);
                 for (var id = 0; id < storage.length; id++)
@@ -1084,16 +1083,31 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     } );
 
 
-    Reveal.addEventListener( 'ready', function( evt ) {
-        if ( !printMode ) {
+    // what to do on startup 
+    function startup() 
+    {
+        console.log("chalkboard startup");
+        if ( !printMode ) 
+        {
             slideIndices = Reveal.getIndices();
             startPlayback( 0 );
         }
-        else {
-            console.log("chalkboard ready callback");
+        else 
+        {
             whenReady( createPrintout );
         }
-    });
+    }
+ 
+    // if 'ready' event has been fired already, call startup()
+    if (reveal.classList.contains('ready'))
+    {
+        startup();
+    }
+    // otherwise connect to 'ready' event
+    else
+    {
+        Reveal.addEventListener( 'ready', startup );
+    }
 
 
     Reveal.addEventListener( 'slidechanged', function( evt ) {
