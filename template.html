@@ -239,6 +239,9 @@ $body$
 
       // load plugins
 	  dependencies: [
+        $for(customRevealPlugin)$
+        { src: '$customRevealPlugin$' },
+        $endfor$
 	  { src: '$template$/reveal.js/plugin/math/math.js' },
 	  { src: '$template$/reveal.js/plugin/notes/notes.js', async: true },
       { src: '$template$/reveal.js-menu/menu.js' },
