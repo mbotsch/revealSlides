@@ -22,9 +22,9 @@
 	<!-- Setup code formatting with highlight.js -->
 	<link rel="stylesheet" href="$template$/cg-highlight/xcode.css">
     
-    $if(customCSS)$
+    $for(customCSS)$
 	<link rel="stylesheet" href="$customCSS$">
-    $endif$
+    $endfor$
 
     <!-- color picker for chalkboard -->
     <script src="$template$/piklor.js/src/piklor.js"></script>
