@@ -2,6 +2,7 @@
 + demos/***
 + videos/***
 + css/***
++ js/***
 + meshes/***
 + animations/***
 + revealSlides/
