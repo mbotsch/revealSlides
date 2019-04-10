@@ -9,6 +9,8 @@
 + revealSlides/cg-chalkboard/***
 + revealSlides/cg-highlight/***
 + revealSlides/cg-quiz/***
++ revealSlides/cg-math/***
++ revealSlides/cg-notes/***
 + revealSlides/cg-zoom/***
 + revealSlides/css/***
 + revealSlides/jquery-2.1.3/***
