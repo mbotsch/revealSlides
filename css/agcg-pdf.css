@@ -14,3 +14,7 @@
 	overflow: visible;
 	margin: auto;
 }
+
+.reveal .slide-number {
+  visibility: hidden;
+}

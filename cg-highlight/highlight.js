@@ -1,5 +1,8 @@
 // START CUSTOM REVEAL.JS INTEGRATION
 (function() {
+	// do not try to guess the programming language used, default to 'plain':
+	hljs.configure({languages:[]});
+
 	// Function to perform a better "data-trim" on code snippets
 	// Will slice an indentation amount on each line of the snippet (amount based on the line having the lowest indentation length)
 	function betterTrim(snippetEl) {

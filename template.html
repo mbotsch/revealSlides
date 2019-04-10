@@ -3,14 +3,19 @@
 
   <head>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     $if(title)$
-	<title>$title$$if(subtitle)$: $subtitle$ $endif$</title>
+	<title>
+      $title$$if(subtitle)$: $subtitle$ $endif$
+    </title>
     $endif$
 
-	<!-- our slightly modified version of reveal's css -->
-	<link rel="stylesheet" href="$template$/css/reveal.css">
+	<!-- reveal's style sheets -->
+    <link rel="stylesheet" href="$template$/reveal.js/css/reset.css">
+	<link rel="stylesheet" href="$template$/reveal.js/css/reveal.css">
 
 	<!-- Theme of AG CG (derived from reveal's white.css) -->
 	<link rel="stylesheet" href="$template$/css/agcg.css">
@@ -28,7 +33,6 @@
 
     <!-- color picker for chalkboard -->
     <script src="$template$/piklor.js/src/piklor.js"></script>
-
 
     <!-- stuff for quiz -->
     <script src="$template$/qrcodejs/qrcode.min.js"></script>
@@ -58,13 +62,11 @@
     <!-- MathJax config -->
     <script type="text/x-mathjax-config">
       MathJax.Hub.Config({
-          jax: ["input/TeX","output/CommonHTML"],
-          extensions: ["TeX/AMSmath.js"],
           menuSettings: { zoom: "Double-Click" },
           styles: { ".reveal section .MJXc-display": { margin: "0.5em 0em 1em 0em" } },
           TeX: {
               Macros: {
-                R: "\\mathbb{R}",
+                R: "{\\mathrm{{I}\\kern-.15em{R}}}",
                 laplace: "{\\Delta}",
                 grad: "{\\nabla}",
                 T: "^{\\mathsf{T}}",
@@ -85,7 +87,6 @@
                 Oh: ['\\mathcal{O}\\left({#1}\\right)',1],
               }
           },
-          "CommonHTML": { matchFontHeight: false }
       });
     </script>
 
@@ -142,7 +143,6 @@ $body$
 	</div>
 
 
-	<script src="$template$/reveal.js/lib/js/head.min.js"></script>
 	<script src="$template$/reveal.js/js/reveal.js"></script>
 
 
@@ -165,11 +165,13 @@ $body$
       minScale:     0.2,
       maxScale:     5,
       pdfMaxPagesPerSlide: 1, // slides are cropped on one page for PDF export
-      pdfSeparateFragments: false, // otherwise slides with fragments and math do not work
+      pdfSeparateFragments: true,
+	  hideInactiveCursor: true,
+	  hideCursorTime: 3000,
 
 
       // use local mathjax installation, use CommonHTML
-      math: { mathjax: '$template$/MathJax/MathJax.js', config: 'TeX-AMS_CHTML-full' },
+      math: { mathjax: '$template$/MathJax/MathJax.js' },
 
 
       // setup chalkboard
@@ -209,6 +211,7 @@ $body$
                     "position": "bottom"
                 }
             },
+            responsive: "false"
         },
         line: {
             backgroundColor: [ "rgba(42,157,223,.1)", "rgba(245,159,0,.1)", "rgba(182,200,40,.1)" ],
@@ -239,22 +242,15 @@ $body$
 
       // load plugins
 	  dependencies: [
-        $for(customRevealPlugin)$
-        { src: '$customRevealPlugin$' },
-        $endfor$
-	  { src: '$template$/reveal.js/plugin/math/math.js' },
-	  { src: '$template$/reveal.js/plugin/notes/notes.js', async: true },
-      { src: '$template$/reveal.js-menu/menu.js' },
-      { src: '$template$/reveal.js-plugins/chart/Chart.min.js' },
-      { src: '$template$/reveal.js-plugins/chart/csv2chart.js' },
+      { src: '$template$/reveal.js-menu/menu.js', async: true },
+      { src: '$template$/reveal.js-plugins/chart/Chart.min.js', async: true },
+      { src: '$template$/reveal.js-plugins/chart/csv2chart.js', async: true },
+      { src: '$template$/reveal.js/plugin/highlight/highlight.js', async: true },
+	  { src: '$template$/cg-math/math.js' },
+	  { src: '$template$/cg-notes/notes.js', async: true },
       { src: '$template$/cg-zoom/zoom.js', async: true },
-      { src: '$template$/cg-chalkboard/chalkboard.js' }, // do not load this async, otherwise print wont work)
+      { src: '$template$/cg-chalkboard/chalkboard.js', async: true }, 
       { src: '$template$/cg-quiz/quiz.js', async: true },
-	  { src: '$template$/cg-highlight/highlight.js', async: true, callback: function() {
-        hljs.configure({languages:[]});
-        var code_blocks = document.querySelectorAll('code');
-        for( var i = 0, len = code_blocks.length; i < len; i++ )  hljs.highlightBlock(code_blocks[i]);
-      }}
       ]
 
 	  });
