@@ -1256,6 +1256,33 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         }
     }
 
+    function duplicatePrevious()
+    {
+        cur = Reveal.getIndices();
+
+        if (cur.f === undefined || cur.f < 0) {
+            // no previous frame
+            console.log("duplicate: no previous frame");
+            return;
+        }
+        if (hasSlideData(cur))
+        {
+            if (!confirm("Really copy from last slide? Current slide is not empty")) {
+                return;
+            }
+        }
+        last = {
+            h: cur.h,
+            v: cur.v,
+            f: cur.f - 1};
+
+        function jsonCopy(src) { return JSON.parse(JSON.stringify(src)); }
+        var data = getSlideData(cur);
+        data.events = jsonCopy(getSlideData(last).events);
+        console.log("duplicated", last, " to ", cur);
+        startPlayback(mode);
+    }
+
 
     // setup keyboard shortcuts
     Reveal.addKeyBinding( { keyCode: 46, key: 'Delete', 
@@ -1286,9 +1313,14 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         description: 'Chalkboard Undo' }, 
         drawUndo );
 
+    Reveal.addKeyBinding( { keyCode: 65, key: 'A', 
+        description: 'Duplicate previous chalkboard drawing' }, 
+        duplicatePrevious );
+
     Reveal.addKeyBinding( { keyCode: 80, key: 'P', 
         description: 'Trigger Print/PDF-Export' }, 
         pdfExport );
+
 
     this.drawUndo          = drawUndo;
     this.toggleChalkboard  = toggleChalkboard;
