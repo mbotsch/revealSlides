@@ -251,6 +251,10 @@ $body$
       { src: '$template$/cg-zoom/zoom.js', async: true },
       { src: '$template$/cg-chalkboard/chalkboard.js', async: true }, 
       { src: '$template$/cg-quiz/quiz.js', async: true },
+$for(customRevealPlugin)$
+      { src: '$customRevealPlugin$' },
+$endfor$
+
       ]
 
 	  });
