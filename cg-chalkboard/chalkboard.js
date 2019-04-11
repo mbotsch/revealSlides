@@ -1313,8 +1313,8 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         description: 'Chalkboard Undo' }, 
         drawUndo );
 
-    Reveal.addKeyBinding( { keyCode: 65, key: 'A', 
-        description: 'Duplicate previous chalkboard drawing' }, 
+    Reveal.addKeyBinding( { keyCode: 82, key: 'R', 
+        description: 'Repeat (duplicate) chalkboard from previous frame' }, 
         duplicatePrevious );
 
     Reveal.addKeyBinding( { keyCode: 80, key: 'P', 
