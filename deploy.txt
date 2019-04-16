@@ -18,6 +18,7 @@
 + revealSlides/reveal.js/***
 + revealSlides/reveal.js-menu/***
 + revealSlides/reveal.js-plugins/***
++ revealSlides/reveal.js-d3/***
 + revealSlides/piklor.js/
 + revealSlides/piklor.js/src/***
 + revealSlides/MathJax/
