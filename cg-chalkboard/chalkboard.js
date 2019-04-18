@@ -130,10 +130,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     buttonBoard.onclick  = function(){ toggleChalkboard(); }
 
     var buttonPen        = createButton(8, 40, "fas fa-pen");
-    buttonPen.onclick    = function(){ 
-        if (pktimer)    clearTimeout(pktimer);
-        if (!pk.isOpen) selectTool(ToolType.PEN); 
-    }
+    buttonPen.onclick    = function(){ togglePen(); }
 
     var buttonEraser     = createButton(8, 72, "fas fa-eraser");
     buttonEraser.onclick = function(){ selectTool(ToolType.ERASER); }
@@ -1152,6 +1149,11 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         updateGUI();
     }
 
+    function togglePen() {
+        if (pktimer)    clearTimeout(pktimer);
+        if (!pk.isOpen) selectTool(ToolType.PEN); 
+    }
+
 
     // check whether slide has blackboard scribbles, and then highlight icon
     function updateGUI()
@@ -1285,6 +1287,9 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
 
     // setup keyboard shortcuts
+    Reveal.addKeyBinding( { keyCode: 87, key: 'W', 
+        description: 'Toggle pen writing' }, 
+        togglePen );
     Reveal.addKeyBinding( { keyCode: 46, key: 'Delete', 
         description: 'Reset Chalkboard' }, 
         clearSlide );
