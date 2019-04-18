@@ -611,9 +611,11 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     }
 
 
-    function startPlayback( finalMode )
+    function startPlayback( finalMode, dont_close )
     {
-        closeChalkboard();
+        if (!dont_close) { // ugly hack, FIXME
+            closeChalkboard();
+        }
         mode = 0;
         for ( var id = 0; id < 2; id++ )
         {
@@ -1254,7 +1256,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         {
             var slideData = getSlideData( slideIndices, mode );
             slideData.events.pop();
-            startPlayback( mode );
+            startPlayback( mode, 1 );
         }
     }
 
@@ -1282,7 +1284,7 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         var data = getSlideData(cur);
         data.events = jsonCopy(getSlideData(last).events);
         console.log("duplicated", last, " to ", cur);
-        startPlayback(mode);
+        startPlayback(mode, 1);
     }
 
 
