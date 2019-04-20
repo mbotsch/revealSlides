@@ -458,6 +458,12 @@
                         var script  = document.createElement( 'script' );
                         script.type = 'text/javascript';
                         script.src  = data.mathjax;
+                        script.onload = function() 
+                        {
+                            /* No need to typeset, since the pre-typeset equations are
+                             * sent from the main presentation to the speaker preview */
+                            MathJax.Hub.Config({ skipStartupTypeset: true });
+                        };
                         head.appendChild( script );
                         mathjaxLoaded = true;
                     }

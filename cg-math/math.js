@@ -4,37 +4,11 @@
  *
  * @author Hakim El Hattab
  */
-
-/* Fixes the following issues:
- *
- * #1924: Thanks to the new reset.css, CommonHTML can be used when we 
- *        disable MathJax' matchFontHeight. CommonHTML should be the
- *        prefered solution, since it is the default MathJax renderer
- *        since MathJax version 2.7.
- *
- * #2105: Problem is caused by dynamically adjusting font height and by 
- *        re-typesetting upon slide-change. Both can now be disabled.
- *
- * #1383: This problem is caused by re-typesetting math content on 
- *        slide change in overview mode, which is disabled now.
- * 
- * #1726: Disabling AssistiveMML removes duplicated math in notes.
- *
- * #2256: If in printPDF mode, we can now enforce that math typesetting 
- *        finishes during the init() function using Promises, such that
- *        the element/fragment copying for separate PDF fragments
- *        now works without problems.
- *
- * Remaining problems:
- *
- * #xxxx: Have to load MathJax in notes.js?
- */
-
 var RevealMath = window.RevealMath || (function(){
 
 	var options = Reveal.getConfig().math || {};
-	var mathjax = options.mathjax || 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js';
-	var config = options.config || 'TeX-AMS_CHTML-full'; // use CommonHTML as default
+	var mathjax = options.mathjax || 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js';
+	var config = options.config || 'TeX-AMS_CHTML-full';
 	var url = mathjax + '?config=' + config;
 
 	var defaultOptions = {
@@ -60,43 +34,64 @@ var RevealMath = window.RevealMath || (function(){
 
 	}
 
+	function loadScript( url, callback ) {
+
+		var head = document.querySelector( 'head' );
+		var script = document.createElement( 'script' );
+		script.type = 'text/javascript';
+		script.src = url;
+
+		// Wrapper for callback to make sure it only fires once
+		var finish = function() {
+			if( typeof callback === 'function' ) {
+				callback.call();
+				callback = null;
+			}
+		}
+
+		script.onload = finish;
+
+		// IE
+		script.onreadystatechange = function() {
+			if ( this.readyState === 'loaded' ) {
+				finish();
+			}
+		}
+
+		// Normal browsers
+		head.appendChild( script );
+
+	}
+
 	return {
-		init: function() {
+		init: function() { 
             return new Promise( function(resolve) {
 
                 var printMode = ( /print-pdf/gi ).test( window.location.search );
 
-                var head = document.querySelector( 'head' );
-                var script = document.createElement( 'script' );
-                script.type = 'text/javascript';
-                script.src = url;
+                defaults( options, defaultOptions );
+                defaults( options.tex2jax, defaultOptions.tex2jax );
+                options.mathjax = options.config = null;
 
-                script.onload = function() 
-                {
-                    // configure MathJax
-                    defaults( options, defaultOptions );
-                    defaults( options.tex2jax, defaultOptions.tex2jax );
-                    options.mathjax = options.config = null;
+                loadScript( url, function() {
+
                     MathJax.Hub.Config( options );
 
                     // Typeset followed by an immediate reveal.js layout since
                     // the typesetting process could affect slide height
                     MathJax.Hub.Queue( [ 'Typeset', MathJax.Hub ] );
                     MathJax.Hub.Queue( Reveal.layout );
-                    MathJax.Hub.Queue( [ 'log', console, "mathjax typeset done" ]);
+                    MathJax.Hub.Queue( [ 'log', console, "mathjax typeset done" ]); // just for debugging
 
                     // in print mode, resolve promise after typesetting is done
                     if (printMode) MathJax.Hub.Queue( resolve );
-                };
+                } );
 
-                // load script
-		        head.appendChild( script );
-
-                // resolve promise
+                // if not in print mode, resolve promise immediately
                 if (!printMode) resolve();
             });
-		}
-	}
+        }
+    }
 
 })();
 
