@@ -110,29 +110,34 @@ var RevealChalkboard = (function(){
         b.style.padding  = "3px";
         b.style.borderRadius = "3px";
         b.style.color    = "lightgrey";
-        b.innerHTML      = '<i class="' + icon + '"></i>';
+        b.style.background = background;
+        if (icon)
+        {
+            b.classList.add("fas");
+            b.classList.add(icon);
+        }
         reveal.appendChild(b);
         return b;
     }
 
-    var buttonBoard      = createButton(8, 8, "fas fa-edit");
+    var buttonBoard      = createButton(8, 8, "fa-edit");
     buttonBoard.onclick  = function(){ toggleChalkboard(); }
 
-    var buttonPen        = createButton(8, 40, "fas fa-pen");
+    var buttonPen        = createButton(8, 40, "fa-pen");
     buttonPen.onclick    = function(){ 
         if (pktimer)    clearTimeout(pktimer);
         if (!pk.isOpen) selectTool(ToolType.PEN); 
     }
 
-    var buttonEraser     = createButton(8, 72, "fas fa-eraser");
+    var buttonEraser     = createButton(8, 72, "fa-eraser");
     buttonEraser.onclick = function(){ selectTool(ToolType.ERASER); }
 
-    var buttonLaser      = createButton(8, 104, "fas fa-magic");
+    var buttonLaser      = createButton(8, 104, "fa-magic");
     buttonLaser.onclick  = function(){ selectTool(ToolType.LASER); }
 
 
     // add color picker to long-tap of buttonPen
-    var pkdiv = createButton(40, 40, "");
+    var pkdiv = createButton(40, 40);
     pkdiv.setAttribute("class", "color-picker");
     var pk = new Piklor(pkdiv, colors);
     pk.colorChosen(function (col) { penColor = col; tool=ToolType.NONE; selectTool(ToolType.PEN); });
@@ -217,23 +222,6 @@ var RevealChalkboard = (function(){
     }
 
 
-    /* Generate container for blocking mouse events from reveal content */
-    //var blocker = document.createElement( 'div' );
-    //blocker.setAttribute( 'data-prevent-swipe', '' );
-    //blocker.oncontextmenu = function() { return false; }
-    //blocker.id                  = "chalkboard blocker";
-    //blocker.style.background    = "rgba(200,0,0,100)";
-    //blocker.style.transition    = "none";
-    //blocker.style.position      = "fixed";
-    //blocker.style.top           = "0px";
-    //blocker.style.left          = "0px";
-    //blocker.style.width         = "100%";
-    //blocker.style.height        = "100%";
-    //blocker.style.visibility    = "visible";
-    //blocker.style.zIndex        = "32";
-    //blocker.style.pointerEvents = "auto";
-    //reveal.appendChild( blocker );
-    //slides.style.zIndex        = "33";
 
     /*****************************************************************
      ** Storage
@@ -1072,9 +1060,14 @@ var RevealChalkboard = (function(){
 
 
     window.addEventListener( "click", function(evt) {
-        if (tool)
+        // if in chalkboard mode, prevent accidential mouse clicks (e.g. on menu icon)
+        // only allow clicks for the four chalkboard's buttons
+        if (tool &&
+            evt.target != buttonPen &&
+            evt.target != buttonLaser &&
+            evt.target != buttonEraser &&
+            evt.target != buttonBoard)
         {
-            console.log("prevent click");
             evt.preventDefault();
             evt.stopPropagation();
             return false;
