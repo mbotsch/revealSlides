@@ -31,13 +31,11 @@ clean:
 	pandoc \
 	--from markdown+emoji+smart \
 	--to revealjs \
-	--section-divs \
 	--no-highlight \
 	--mathjax \
 	--filter $(FILTER)/cols \
 	--filter $(FILTER)/media \
 	--template $(TEMPLATE) \
 	--variable template=$(REVEAL) \
-	--variable chalkboard=${<:.md=.json} \
 	-o $@
 
