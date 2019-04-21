@@ -9,7 +9,7 @@
  ******************************************************************/
 
 
-var RevealChalkboard = window.RevealChalkboard || (function(){
+var RevealChalkboard = (function(){
 
     var DEBUG = false;
 
@@ -33,9 +33,10 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     }
 
 
-    /*****************************************************************
-     ** Configuration
-     ******************************************************************/
+
+    /************************************************************************
+     ** Configuration options
+     ************************************************************************/
 
     // default values or user configuration?
     var config     = Reveal.getConfig().chalkboard || {};
@@ -91,21 +92,9 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
 
 
-    /*****************************************************************
-     ** Setup
-     ******************************************************************/
-
-    function whenReady( callback )
-    {
-        // wait for drawings to be loaded and markdown to be parsed
-        if ( loaded == null || document.querySelector('section[data-markdown]:not([data-markdown-parsed])') ) {
-            setTimeout( whenReady, 100, callback )
-        }
-        else {
-            callback();
-        }
-    }
-
+    /************************************************************************
+     ** Setup GUI
+     ************************************************************************/
 
     // create button on the left side
     function createButton(left, bottom, icon)
@@ -228,6 +217,24 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     }
 
 
+    /* Generate container for blocking mouse events from reveal content */
+    //var blocker = document.createElement( 'div' );
+    //blocker.setAttribute( 'data-prevent-swipe', '' );
+    //blocker.oncontextmenu = function() { return false; }
+    //blocker.id                  = "chalkboard blocker";
+    //blocker.style.background    = "rgba(200,0,0,100)";
+    //blocker.style.transition    = "none";
+    //blocker.style.position      = "fixed";
+    //blocker.style.top           = "0px";
+    //blocker.style.left          = "0px";
+    //blocker.style.width         = "100%";
+    //blocker.style.height        = "100%";
+    //blocker.style.visibility    = "visible";
+    //blocker.style.zIndex        = "32";
+    //blocker.style.pointerEvents = "auto";
+    //reveal.appendChild( blocker );
+    //slides.style.zIndex        = "33";
+
     /*****************************************************************
      ** Storage
      ******************************************************************/
@@ -241,46 +248,50 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     ];
 
 
-    var loaded = null;
-    if ( config.src != null )
-    {
-        loadData( config.src );
-    }
-
-
     /**
      * Load data.
      */
     function loadData( filename )
     {
-        var xhr = new XMLHttpRequest();
-        xhr.onload = function()
-        {
-            if (xhr.readyState === 4) {
-                storage = JSON.parse(xhr.responseText);
-                for (var id = 0; id < storage.length; id++)
+        return new Promise( function(resolve) {
+
+            // determine scribble filename
+            var url = location.pathname;
+            var basename = (url.split('\\').pop().split('/').pop().split('.'))[0];
+            var filename = basename + '.json';
+
+            console.log("chalkboard load " + filename);
+            var req = new XMLHttpRequest();
+
+            req.onload = function()
+            {
+                if (req.readyState === 4) 
                 {
-                    if ( drawingCanvas[id].width != storage[id].width || drawingCanvas[id].height != storage[id].height )
+                    storage = JSON.parse(req.responseText);
+                    if ( drawingCanvas[0].width != storage[0].width || drawingCanvas[0].height != storage[0].height )
                     {
                         alert("Chalkboard: Loaded data does not match width/height of presentation");
                     }
+                    console.log("chalkboard loaded");
                 }
+                else
+                {
+                    console.warn('Failed to get file ' + filename);
+                }
+                resolve();
             }
-            else
-            {
-                console.warn( 'Failed to get file ' + filename +". ReadyState: " + xhr.readyState + ", Status: " + xhr.status);
-            }
-            loaded = true;
-        };
 
-        xhr.open( 'GET', filename, true );
-        try {
-            xhr.send();
-        }
-        catch ( error ) {
-            console.warn( 'Failed to get file ' + filename + '. Make sure that the presentation and the file are served by a HTTP server and the file can be found there. ' + error );
-        }
+            req.onerror = function()
+            {
+                console.warn('Failed to get file ' + filename);
+                resolve();
+            }
+
+            req.open('GET', filename, true);
+            req.send();
+        });
     }
+
 
     /**
      * Download data.
@@ -290,12 +301,19 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
         var a = document.createElement('a');
         document.body.appendChild(a);
         try {
+            // function to adjust precision of numbers when converting to JSON
+            function twoDigits(key, val) {
+                return val.toFixed ? Number(val.toFixed(2)) : val;
+            }
+            var blob = new Blob( [ JSON.stringify( storage, twoDigits ) ], { type: "application/json"} );
+
+            // setup link and filename for downloaded scribbles
             var url = location.pathname;
             var basename = (url.split('\\').pop().split('/').pop().split('.'))[0];
             var filename = basename + ".json";
             a.download = filename;
-            var blob = new Blob( [ JSON.stringify( storage ) ], { type: "application/json"} );
             a.href = window.URL.createObjectURL( blob );
+
         } catch( error ) {
             a.innerHTML += " (" + error + ")";
         }
@@ -451,12 +469,6 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
                         }
                         break;
 
-                    case "clear":
-                        addPrintout( parent, nextSlide[i], imgCanvas );
-                        imgCtx.clearRect(0,0,imgCanvas.width,imgCanvas.height);
-                        imgCtx.fill();
-                        break;
-
                     default:
                         break;
                 }
@@ -464,37 +476,22 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
 
             if ( slideData.events.length )
             {
-                addPrintout( parent, nextSlide[i], imgCanvas );
+                var newSlide = document.createElement( 'section' );
+                newSlide.classList.add( 'present' );
+                newSlide.innerHTML = '<h1 style="visibility:hidden">Drawing</h1>';
+                newSlide.setAttribute("data-background-size", '100% 100%' );
+                newSlide.setAttribute("data-background-repeat", 'norepeat' );
+                newSlide.setAttribute("data-background", 'url("' + imgCanvas.toDataURL("image/png") +'")' );
+                if ( nextSlide[i] != null ) {
+                    parent.insertBefore( newSlide, nextSlide[i] );
+                }
+                else {
+                    parent.append( newSlide );
+                }
             }
         }
-        Reveal.sync();
     }
 
-
-    function addPrintout( parent, nextSlide, imgCanvas )
-    {
-        var slideCanvas = document.createElement('canvas');
-        slideCanvas.width = Reveal.getConfig().width;
-        slideCanvas.height = Reveal.getConfig().height;
-        var ctx = slideCanvas.getContext("2d");
-        ctx.fillStyle = "white";
-        ctx.rect(0,0,slideCanvas.width,slideCanvas.height);
-        ctx.fill();
-        ctx.drawImage(imgCanvas, 0, 0);
-
-        var newSlide = document.createElement( 'section' );
-        newSlide.classList.add( 'present' );
-        newSlide.innerHTML = '<h1 style="visibility:hidden">Drawing</h1>';
-        newSlide.setAttribute("data-background-size", '100% 100%' );
-        newSlide.setAttribute("data-background-repeat", 'norepeat' );
-        newSlide.setAttribute("data-background", 'url("' + slideCanvas.toDataURL("image/png") +'")' );
-        if ( nextSlide != null ) {
-            parent.insertBefore( newSlide, nextSlide );
-        }
-        else {
-            parent.append( newSlide );
-        }
-    }
 
 
     /*****************************************************************
@@ -648,9 +645,6 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     {
         switch ( event.type )
         {
-            case "clear":
-                clearCanvas( id );
-                break;
             case "draw":
                 drawCurve( id, event);
                 break;
@@ -1074,7 +1068,18 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
             evt.stopPropagation();
             return false;
         }
-    } );
+    }, true );
+
+
+    window.addEventListener( "click", function(evt) {
+        if (tool)
+        {
+            console.log("prevent click");
+            evt.preventDefault();
+            evt.stopPropagation();
+            return false;
+        }
+    }, true );
 
 
     window.addEventListener( "resize", function() {
@@ -1083,31 +1088,14 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     } );
 
 
-    // what to do on startup 
-    function startup() 
-    {
-        console.log("chalkboard startup");
+
+    Reveal.addEventListener( 'ready', function() {
         if ( !printMode ) 
         {
             slideIndices = Reveal.getIndices();
             startPlayback( 0 );
         }
-        else 
-        {
-            whenReady( createPrintout );
-        }
-    }
- 
-    // if 'ready' event has been fired already, call startup()
-    if (reveal.classList.contains('ready'))
-    {
-        startup();
-    }
-    // otherwise connect to 'ready' event
-    else
-    {
-        Reveal.addEventListener( 'ready', startup );
-    }
+    });
 
 
     Reveal.addEventListener( 'slidechanged', function( evt ) {
@@ -1295,6 +1283,25 @@ var RevealChalkboard = window.RevealChalkboard || (function(){
     this.clearSlide        = clearSlide;
     this.download          = downloadData;
 
-    return this;
+
+	return {
+		init: function() { 
+            return new Promise( function(resolve) {
+                
+                if (printMode)
+                {
+                    // load scribbles, create chalkboard slides, resolve promise
+                    loadData().then(createPrintout).then(resolve);
+                }
+                else
+                {
+                    // load scribbles, resolve promise
+                    loadData().then(resolve);
+                }
+            });
+        }
+    }
+
 })();
 
+Reveal.registerPlugin( 'chalkboard', RevealChalkboard );
