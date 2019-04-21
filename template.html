@@ -159,19 +159,13 @@ $body$
       minScale:     0.2,
       maxScale:     5,
       pdfMaxPagesPerSlide: 1, // slides are cropped on one page for PDF export
-      pdfSeparateFragments: true,
+      pdfSeparateFragments: false,
 	  hideInactiveCursor: true,
 	  hideCursorTime: 3000,
 
 
       // use local mathjax installation, use CommonHTML
       math: { mathjax: '$template$/MathJax/MathJax.js' },
-
-
-      // setup chalkboard
-      chalkboard: {
-        src:        "$chalkboard$"
-      },
 
 
       // setup reveal-menu
@@ -237,9 +231,9 @@ $body$
       { src: '$template$/reveal.js-plugins/chart/csv2chart.js', async: true },
       { src: '$template$/reveal.js/plugin/highlight/highlight.js', async: true },
 	  { src: '$template$/cg-math/math.js' },
+      { src: '$template$/cg-chalkboard/chalkboard.js' }, 
 	  { src: '$template$/cg-notes/notes.js', async: true },
       { src: '$template$/cg-zoom/zoom.js', async: true },
-      { src: '$template$/cg-chalkboard/chalkboard.js', async: true }, 
       { src: '$template$/cg-quiz/quiz.js', async: true },
       ]
 
