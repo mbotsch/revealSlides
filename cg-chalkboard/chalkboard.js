@@ -62,26 +62,23 @@ var RevealChalkboard = (function(){
     console.log("Coalesced events: " + !!(window.PointerEvent && (new PointerEvent("pointermove")).getCoalescedEvents));
 
 
-    // setup eraser
-    var eraserRadius = 15;
-    var eraserCursor = 'url("' + path + 'img/sponge.png") 25 20, auto';
+    // canvas for dynamic cursor generation
+    var cursorCanvas = document.createElement( 'canvas' );
+    cursorCanvas.id     = "CursorCanvas";
+    cursorCanvas.width  = 20;
+    cursorCanvas.height = 20;
 
-    // setup pen
-    var penCursor = 'url(' + path + 'img/boardmarker.png), auto';
+    // different cursors used by chalkboard
+    var eraserCursor = 'url("' + path + 'img/sponge.png") 25 20, auto';
+    var eraserRadius = 15;
+    var laserCursor;
+    var penCursor;
     var penColor  = "red";
     var color = [ "red", "black" ]; // old color handling
 
-    // setup laser
-    var laserCursor = 'url(' + path + 'img/laser.png) 17 17, auto';
-    var laserRadius  = 17;
-    var laser = document.createElement( 'img' );
-    laser.src              = path + 'img/laser.png';
-    laser.id               = "laser";
-    laser.style.visibility = "hidden";
-    laser.style.position   = "absolute";
-    laser.style.zIndex     = 40;
-    laser.oncontextmenu = function() { return false; }
-    reveal.appendChild( laser );
+    // auto-hide cursor
+    var cursorInactiveTimeout;
+    var hideCursorTime = 1000; // 1 sec
 
 
     // store which tools are active
@@ -100,6 +97,7 @@ var RevealChalkboard = (function(){
     function createButton(left, bottom, icon)
     {
         var b = document.createElement( 'div' );
+        b.classList.add("chalkboard");
         b.style.position = "absolute";
         b.style.zIndex   = 40;
         b.style.left     = left + "px";
@@ -139,8 +137,9 @@ var RevealChalkboard = (function(){
     // add color picker to long-tap of buttonPen
     var pkdiv = createButton(40, 40);
     pkdiv.setAttribute("class", "color-picker");
-    var pk = new Piklor(pkdiv, colors);
-    pk.colorChosen(function (col) { penColor = col; tool=ToolType.NONE; selectTool(ToolType.PEN); });
+    var pkoptions = { template: "<div class=\"chalkboard\" data-col=\"{color}\" style=\"background-color: {color}\"></div>" };
+    var pk = new Piklor(pkdiv, colors, pkoptions);
+    pk.colorChosen(function (col) { penColor = col; tool=ToolType.NONE; selectTool(ToolType.PEN); updateCursor(); });
     var pktimer;
     buttonPen.onmousedown = function(){ pktimer = setTimeout(function(){pk.open();}, 500); }
 
@@ -214,6 +213,9 @@ var RevealChalkboard = (function(){
             canvas.id = 'drawOnBoard';
             canvas.style.zIndex = "36";
             canvas.style.visibility = "hidden";
+            //canvas.style.height     = 2*height + "px";
+            //canvas.height           = 2 * height * canvasScale;
+            //slides.style.overflow  = 'hidden auto !important';
         }
 
 
@@ -505,27 +507,6 @@ var RevealChalkboard = (function(){
     }
 
 
-    function showLaser(evt)
-    {
-        if (!activeStroke) // only when drawing not active
-        {
-            evt.preventDefault();
-            evt.stopPropagation();
-            laser.style.left = (evt.pageX - laserRadius) +"px" ;
-            laser.style.top  = (evt.pageY - laserRadius) +"px" ;
-            laser.style.visibility = "visible";
-            slides.style.cursor = 'none';
-        }
-    }
-
-    function hideLaser(evt)
-    {
-        evt.preventDefault();
-        evt.stopPropagation();
-        laser.style.visibility = "hidden";
-        slides.style.cursor = 'none';
-    }
-
 
     /**
      * Opens an overlay for the chalkboard.
@@ -538,6 +519,7 @@ var RevealChalkboard = (function(){
         mode         = 1;
         boardMode    = true;
 
+        slides.style.overflow = 'hidden auto !important';
         drawingCanvas[1].canvas.style.visibility = "visible";
         tool = ToolType.PEN;
     }
@@ -555,7 +537,6 @@ var RevealChalkboard = (function(){
         boardMode    = false;
 
         drawingCanvas[1].canvas.style.visibility = "hidden";
-        tool = ToolType.NONE;
     }
 
 
@@ -705,6 +686,9 @@ var RevealChalkboard = (function(){
         evt.preventDefault();
         evt.stopPropagation();
 
+        // cancel auto-hide
+        clearTimeout( cursorInactiveTimeout );
+
         // update scale, zoom, and bounding rectangle
         slideZoom  = slides.style.zoom || 1;
 
@@ -806,8 +790,8 @@ var RevealChalkboard = (function(){
             activeStroke = null;
         }
 
-        // hide/reset cursor
-        slides.style.cursor = 'none';
+        // reset cursor
+        showLaserCursor();
     };
 
 
@@ -820,6 +804,9 @@ var RevealChalkboard = (function(){
             {
                 console.log("pointerdown: " + evt.pointerType + ", " + evt.button + ", " + evt.buttons);
             }
+
+            // no tool selected -> return
+            if (!tool) return;
 
             switch(evt.pointerType)
             {
@@ -839,10 +826,7 @@ var RevealChalkboard = (function(){
                     break;
 
                 case "touch":
-                    if (tool)
-                    {
-                        showLaser(evt);
-                    }
+                    showLaserCursor();
                     break;
             }
         }, true );
@@ -855,6 +839,17 @@ var RevealChalkboard = (function(){
                 console.log("pointermove: " + evt.pointerType + ", " + evt.button + ", " + evt.buttons + ", " + evt.pressure);
             }
 
+            // no tool selected -> return
+		    if (!tool) return;
+
+            // no mouse button pressed -> show laser, active auto-hide, return
+            if (!evt.buttons)
+            {
+                showLaserCursor();
+                return;
+            }
+
+            // mouse button pressed
             switch(evt.pointerType)
             {
                 case "pen":
@@ -881,10 +876,7 @@ var RevealChalkboard = (function(){
                     break;
 
                 case "touch":
-                    if (tool)
-                    {
-                        showLaser(evt);
-                    }
+                    showLaserCursor();
                     break;
             }
         });
@@ -896,6 +888,9 @@ var RevealChalkboard = (function(){
             {
                 console.log("pointerup: " + evt.pointerType + ", " + evt.button + ", " + evt.buttons);
             }
+
+            // no tool selected -> return
+		    if (!tool) return;
 
             switch(evt.pointerType)
             {
@@ -915,10 +910,7 @@ var RevealChalkboard = (function(){
                     break;
 
                 case "touch":
-                    if (tool)
-                    {
-                        hideLaser(evt);
-                    }
+                    showLaserCursor();
                     break;
             }
         });
@@ -943,6 +935,7 @@ var RevealChalkboard = (function(){
 
 
         slides.addEventListener( 'mousemove', function(evt) {
+		    if (tool && !evt.buttons) showLaserCursor();
             switch(tool)
             {
                 case ToolType.PEN:
@@ -972,6 +965,7 @@ var RevealChalkboard = (function(){
 
 
         slides.addEventListener( 'touchstart', function(evt) {
+		    if (tool) showLaserCursor();
             if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
             {
                 // iPad pencil -> draw
@@ -1001,6 +995,7 @@ var RevealChalkboard = (function(){
 
 
         slides.addEventListener( 'touchmove', function(evt) {
+		    if (tool) showCursor();
             if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
             {
                 // iPad pencil -> draw
@@ -1062,11 +1057,7 @@ var RevealChalkboard = (function(){
     window.addEventListener( "click", function(evt) {
         // if in chalkboard mode, prevent accidential mouse clicks (e.g. on menu icon)
         // only allow clicks for the four chalkboard's buttons
-        if (tool &&
-            evt.target != buttonPen &&
-            evt.target != buttonLaser &&
-            evt.target != buttonEraser &&
-            evt.target != buttonBoard)
+        if (tool && !evt.target.classList.contains("chalkboard"))
         {
             evt.preventDefault();
             evt.stopPropagation();
@@ -1134,6 +1125,46 @@ var RevealChalkboard = (function(){
     }
 
 
+    // set laser and pen cursor
+    function updateCursor()
+    {
+        // convert penColor to rgb
+        var elem = document.body.appendChild(document.createElement('fictum'));
+        elem.style.color = penColor;
+        var color = getComputedStyle(elem).color;
+        var rgb = color.substring(color.indexOf('(')+1, color.lastIndexOf(')')).split(/,\s*/);
+        document.body.removeChild(elem);
+
+        // setup pen color with alpha=255 and alpha=0
+        var col1 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",255)";
+        var col2 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",128)";
+        var col3 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",0)";
+
+        var ctx  = cursorCanvas.getContext("2d");
+
+        // render pen cursor
+        var grdPen   = ctx.createRadialGradient(10, 10, 1, 10, 10, 3);
+        grdPen.addColorStop(0, col1);
+        grdPen.addColorStop(1, col3);
+        ctx.clearRect(0, 0, 20, 20); 
+        ctx.fillStyle = grdPen;
+        ctx.fillRect(0, 0, 20, 20);
+        penCursor = "url(" + cursorCanvas.toDataURL() + ") 10 10, auto";
+
+        // render laser cursor
+        var grdLaser = ctx.createRadialGradient(10, 10, 1, 10, 10, 10);
+        grdLaser.addColorStop(0, col2);
+        grdLaser.addColorStop(1, col3);
+        ctx.clearRect(0, 0, 20, 20); 
+        ctx.fillStyle = grdLaser;
+        ctx.fillRect(0, 0, 20, 20);
+        laserCursor = "url(" + cursorCanvas.toDataURL() + ") 10 10, auto";
+
+        // reset cursor
+        slides.style.cursor = tool ? 'none' : '';
+    }
+
+
     // check whether slide has blackboard scribbles, and then highlight icon
     function updateGUI()
     {
@@ -1184,8 +1215,8 @@ var RevealChalkboard = (function(){
         }
 
 
-        // hide mouse cursor if some tool is active
-        slides.style.cursor = tool ? 'none' : '';
+        // update cursor
+        updateCursor();
     }
 
 
@@ -1194,6 +1225,18 @@ var RevealChalkboard = (function(){
     Reveal.addEventListener( 'fragmentshown',  updateGUI );
     Reveal.addEventListener( 'fragmenthidden', updateGUI );
 
+
+	function showLaserCursor() 
+    {
+        slides.style.cursor = laserCursor;
+        clearTimeout( cursorInactiveTimeout );
+        cursorInactiveTimeout = setTimeout( hideCursor, hideCursorTime );
+	}
+
+	function hideCursor() 
+    {
+        slides.style.cursor = 'none';
+	}
 
 
     function clearSlide()
