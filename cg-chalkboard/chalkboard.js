@@ -43,9 +43,6 @@ var RevealChalkboard = (function(){
     var colors     = config.colors || [ "black", "red", "green", "blue", "yellow", "cyan", "magenta" ];
     var background = config.background || "white";
 
-    // bugfix for reveal.js needed
-    var pdfCreated=false;
-
     // handle CSS zoom (Chrome), CSS scale (others), and highDPI/retina scale
     // (has to be updated later on, i.e., after reveal layout)
     var reveal      = document.querySelector( '.reveal' );
@@ -376,10 +373,6 @@ var RevealChalkboard = (function(){
     {
         console.log("chalkboard create printout");
 
-        // did we do this already? (reveal currently triggers 'ready' callback twice)
-        if (pdfCreated) { console.warn("createPrintout called a 2nd time. Should not happen!"); return; }
-        pdfCreated=true;
-        
         var nextSlide = [];
         var width   = Reveal.getConfig().width;
         var height  = Reveal.getConfig().height;
@@ -791,7 +784,7 @@ var RevealChalkboard = (function(){
         }
 
         // reset cursor
-        showLaserCursor();
+        showCursor();
     };
 
 
@@ -826,7 +819,7 @@ var RevealChalkboard = (function(){
                     break;
 
                 case "touch":
-                    showLaserCursor();
+                    showCursor();
                     break;
             }
         }, true );
@@ -845,7 +838,7 @@ var RevealChalkboard = (function(){
             // no mouse button pressed -> show laser, active auto-hide, return
             if (!evt.buttons)
             {
-                showLaserCursor();
+                showCursor();
                 return;
             }
 
@@ -876,7 +869,7 @@ var RevealChalkboard = (function(){
                     break;
 
                 case "touch":
-                    showLaserCursor();
+                    showCursor();
                     break;
             }
         });
@@ -910,7 +903,7 @@ var RevealChalkboard = (function(){
                     break;
 
                 case "touch":
-                    showLaserCursor();
+                    showCursor();
                     break;
             }
         });
@@ -935,7 +928,7 @@ var RevealChalkboard = (function(){
 
 
         slides.addEventListener( 'mousemove', function(evt) {
-		    if (tool && !evt.buttons) showLaserCursor();
+		    if (tool && !evt.buttons) showCursor();
             switch(tool)
             {
                 case ToolType.PEN:
@@ -965,7 +958,7 @@ var RevealChalkboard = (function(){
 
 
         slides.addEventListener( 'touchstart', function(evt) {
-		    if (tool) showLaserCursor();
+		    if (tool) showCursor();
             if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
             {
                 // iPad pencil -> draw
@@ -1226,9 +1219,19 @@ var RevealChalkboard = (function(){
     Reveal.addEventListener( 'fragmenthidden', updateGUI );
 
 
-	function showLaserCursor() 
+	function showCursor() 
     {
-        slides.style.cursor = laserCursor;
+        switch (tool)
+        {
+            case ToolType.PEN:
+            case ToolType.LASER:
+                slides.style.cursor = laserCursor;
+                break;
+
+            case ToolType.ERASER:
+                slides.style.cursor = eraserCursor;
+                break;
+        }
         clearTimeout( cursorInactiveTimeout );
         cursorInactiveTimeout = setTimeout( hideCursor, hideCursorTime );
 	}
