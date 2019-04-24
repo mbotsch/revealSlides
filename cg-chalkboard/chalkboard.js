@@ -35,6 +35,18 @@ var RevealChalkboard = (function(){
     }
 
 
+	function injectStyleSheet( value ) {
+		var tag = document.createElement( 'style' );
+		tag.type = 'text/css';
+		if( tag.styleSheet ) {
+			tag.styleSheet.cssText = value;
+		}
+		else {
+			tag.appendChild( document.createTextNode( value ) );
+		}
+		document.getElementsByTagName( 'head' )[0].appendChild( tag );
+	}
+
 
     /************************************************************************
      ** Configuration options
@@ -52,6 +64,7 @@ var RevealChalkboard = (function(){
     var slideZoom   = slides.style.zoom || 1;
     var slideScale  = Reveal.getScale();
     var slideRect   = slides.getBoundingClientRect();
+    var slideScroll = 0;
     var canvasScale = window.devicePixelRatio || 1;
 
 
@@ -143,10 +156,12 @@ var RevealChalkboard = (function(){
     buttonPen.onmousedown = function(){ pktimer = setTimeout(function(){pk.open();}, 500); }
 
 
+    // create canvases
     var drawingCanvas = [ {id: "notescanvas" }, {id: "chalkboard" } ];
     setupDrawingCanvas(0);
     setupDrawingCanvas(1);
     var mode = 0; // 0: draw on slides, 1: draw on whiteboard
+    injectStyleSheet(".reveal .chalkboardContainer { overflow: scroll; -webkit-overflow-scrolling: touch; }");
 
     var mouseX = 0;
     var mouseY = 0;
@@ -163,19 +178,30 @@ var RevealChalkboard = (function(){
         // size of slides
         var width  = Reveal.getConfig().width;
         var height = Reveal.getConfig().height;
-        if (id==1) height*=2;
 
+        // div wrapper
+        var container = document.createElement( 'div' );
+        container.classList.add("chalkboardContainer");
+        container.setAttribute( 'data-prevent-swipe', '' );
+        container.style.transition = "none";
+        container.style.margin     = "0";
+        container.style.padding    = "0";
+        container.style.border     = "none";
+        container.style.position   = "absolute";
+        container.style.top        = "0px";
+        container.style.left       = "0px";
+        container.style.width      = "100%";
+        container.style.height     = "100%";
+        container.style.maxHeight  = "100%";
+        
         // create canvas
         var canvas = document.createElement( 'canvas' );
         canvas.setAttribute( 'data-prevent-swipe', '' );
         canvas.style.background = id==0 ? "rgba(0,0,0,0)" : background;
-        canvas.style.boxSizing  = "border-box";
-        canvas.style.transition = "none";
         canvas.style.border     = "1px solid transparent";
-        canvas.style.position   = "absolute";
-        canvas.style.top        = "0px";
-        canvas.style.left       = "0px";
-        canvas.style.width      = width + "px";
+        canvas.style.boxSizing  = "border-box";
+        canvas.style.position   = "relative";
+        canvas.style.width      = "100%";
         canvas.style.height     = height + "px";
         canvas.width            = width  * canvasScale;
         canvas.height           = height * canvasScale;
@@ -188,6 +214,7 @@ var RevealChalkboard = (function(){
 
         // store relevant information
         drawingCanvas[id].canvas    = canvas;
+        drawingCanvas[id].container = container;
         drawingCanvas[id].context   = ctx;
         drawingCanvas[id].width     = width;
         drawingCanvas[id].height    = height;
@@ -204,20 +231,46 @@ var RevealChalkboard = (function(){
         if ( id == "0" )
         {
             canvas.id = 'drawOnSlides';
-            canvas.style.zIndex = "34";
-            canvas.style.visibility = "visible";
-            canvas.style.pointerEvents = "none";
+            container.style.zIndex = "34";
+            container.style.pointerEvents = "none";
         }
         else
         {
             canvas.id = 'drawOnBoard';
-            canvas.style.zIndex = "36";
-            canvas.style.visibility = "hidden";
+            container.style.zIndex = "36";
+            container.style.visibility = "hidden";
+
+            // add page on double click
+            canvas.ondblclick = function(evt) { 
+                // compute new page height
+                var h = drawingCanvas[1].height + Reveal.getConfig().height;
+                drawingCanvas[1].height = h
+
+                // set canvas properties
+                var canvas = drawingCanvas[1].canvas;
+                canvas.style.height = h + "px";
+                canvas.height = h * canvasScale;
+
+                // update context
+                var ctx = canvas.getContext("2d");
+                ctx.scale(canvasScale, canvasScale);
+                ctx.lineCap   = 'round';
+                ctx.lineWidth = 2;
+
+                // restore previous drawings
+                startPlayback(1);
+
+                // don't propagate event
+                evt.preventDefault(); 
+                evt.stopPropagation();
+                return false; 
+            }
         }
 
 
         // add div to reveal.slides
-        document.querySelector( '.reveal .slides' ).appendChild( canvas );
+        slides.appendChild( container );
+        container.appendChild( canvas );
     }
 
 
@@ -512,8 +565,8 @@ var RevealChalkboard = (function(){
         mode         = 1;
         boardMode    = true;
 
-        slides.style.overflow = 'hidden auto !important';
-        drawingCanvas[1].canvas.style.visibility = "visible";
+        drawingCanvas[1].container.style.visibility = "visible";
+        drawingCanvas[1].container.style.pointerEvents = "auto";
         tool = ToolType.PEN;
     }
 
@@ -529,7 +582,9 @@ var RevealChalkboard = (function(){
         mode         = 0;
         boardMode    = false;
 
-        drawingCanvas[1].canvas.style.visibility = "hidden";
+        drawingCanvas[1].container.style.visibility = "hidden";
+        drawingCanvas[1].container.style.pointerEvents = "none";
+        tool = ToolType.NONE;
     }
 
 
@@ -965,15 +1020,13 @@ var RevealChalkboard = (function(){
                 {
                     if (t.touchType == "stylus")
                     {
-                        if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
-                        {
-                            slideScale  = Reveal.getScale();
-                            slideRect   = slides.getBoundingClientRect();
-                            evt.offsetX = (t.clientX - slideRect.left) / slideScale;
-                            evt.offsetY = (t.clientY - slideRect.top ) / slideScale;
-                            startStroke(evt);
-                            return;
-                        }
+                        slideScale  = Reveal.getScale();
+                        slideRect   = slides.getBoundingClientRect();
+                        slideScroll = drawingCanvas[mode].container.scrollTop;
+                        evt.offsetX = (t.clientX - slideRect.left) / slideScale;
+                        evt.offsetY = (t.clientY - slideRect.top ) / slideScale + slideScroll;
+                        startStroke(evt);
+                        return;
                     }
                 }
             }
@@ -992,7 +1045,7 @@ var RevealChalkboard = (function(){
                     if (t.touchType == "stylus")
                     {
                         evt.offsetX = (t.clientX - slideRect.left) / slideScale;
-                        evt.offsetY = (t.clientY - slideRect.top ) / slideScale;
+                        evt.offsetY = (t.clientY - slideRect.top) / slideScale + slideScroll;
                         continueStroke(evt);
                         return;
                     }
