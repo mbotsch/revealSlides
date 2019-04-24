@@ -8,6 +8,8 @@
  *  License: MIT license (see LICENSE.md)
  ******************************************************************/
 
+/* Chrome bug: for scrolling chalkboard on Chrome, disable threaded scrolling in chrome://flags
+ */
 
 var RevealChalkboard = (function(){
 
@@ -66,7 +68,7 @@ var RevealChalkboard = (function(){
     cursorCanvas.height = 20;
 
     // different cursors used by chalkboard
-    var eraserCursor = 'url("' + path + 'img/sponge.png") 25 20, auto';
+    var eraserCursor = 'url("' + path + 'sponge.png") 25 20, auto';
     var eraserRadius = 15;
     var laserCursor;
     var penCursor;
@@ -210,9 +212,6 @@ var RevealChalkboard = (function(){
             canvas.id = 'drawOnBoard';
             canvas.style.zIndex = "36";
             canvas.style.visibility = "hidden";
-            //canvas.style.height     = 2*height + "px";
-            //canvas.height           = 2 * height * canvasScale;
-            //slides.style.overflow  = 'hidden auto !important';
         }
 
 
