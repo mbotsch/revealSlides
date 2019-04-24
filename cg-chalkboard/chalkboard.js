@@ -285,11 +285,13 @@ var RevealChalkboard = (function(){
     function downloadData()
     {
         var a = document.createElement('a');
+        a.classList.add("chalkboard"); // otherwise a.click() is prevented/cancelled by global listener
         document.body.appendChild(a);
         try {
             // function to adjust precision of numbers when converting to JSON
             function twoDigits(key, val) {
-                return val.toFixed ? Number(val.toFixed(2)) : val;
+                if (val != undefined)
+                    return val.toFixed ? Number(val.toFixed(2)) : val;
             }
             var blob = new Blob( [ JSON.stringify( storage, twoDigits ) ], { type: "application/json"} );
 
@@ -302,6 +304,7 @@ var RevealChalkboard = (function(){
 
         } catch( error ) {
             a.innerHTML += " (" + error + ")";
+            console.error("chalkboard download error: " + error);
         }
         a.click();
         document.body.removeChild(a);
