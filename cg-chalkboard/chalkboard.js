@@ -161,7 +161,7 @@ var RevealChalkboard = (function(){
     setupDrawingCanvas(0);
     setupDrawingCanvas(1);
     var mode = 0; // 0: draw on slides, 1: draw on whiteboard
-    injectStyleSheet(".reveal .chalkboardContainer { overflow: scroll; -webkit-overflow-scrolling: touch; }");
+    injectStyleSheet(".reveal .chalkboardContainer { overflow: hidden auto; -webkit-overflow-scrolling: touch; }");
 
     var mouseX = 0;
     var mouseY = 0;
@@ -181,7 +181,6 @@ var RevealChalkboard = (function(){
 
         // div wrapper
         var container = document.createElement( 'div' );
-        container.classList.add("chalkboardContainer");
         container.setAttribute( 'data-prevent-swipe', '' );
         container.style.transition = "none";
         container.style.margin     = "0";
@@ -239,38 +238,43 @@ var RevealChalkboard = (function(){
             canvas.id = 'drawOnBoard';
             container.style.zIndex = "36";
             container.style.visibility = "hidden";
+            container.classList.add("chalkboardContainer");
 
             // add page on double click
-            canvas.ondblclick = function(evt) { 
-                // compute new page height
-                var h = drawingCanvas[1].height + Reveal.getConfig().height;
-                drawingCanvas[1].height = h
-
-                // set canvas properties
-                var canvas = drawingCanvas[1].canvas;
-                canvas.style.height = h + "px";
-                canvas.height = h * canvasScale;
-
-                // update context
-                var ctx = canvas.getContext("2d");
-                ctx.scale(canvasScale, canvasScale);
-                ctx.lineCap   = 'round';
-                ctx.lineWidth = 2;
-
-                // restore previous drawings
-                startPlayback(1);
-
-                // don't propagate event
-                evt.preventDefault(); 
-                evt.stopPropagation();
-                return false; 
-            }
+            canvas.ondblclick = increaseChalkboardHeight;
         }
 
 
         // add div to reveal.slides
         slides.appendChild( container );
         container.appendChild( canvas );
+    }
+
+
+    function increaseChalkboardHeight(evt) 
+    { 
+        // compute new page height
+        var h = drawingCanvas[1].height + Reveal.getConfig().height;
+        drawingCanvas[1].height = h
+
+        // set canvas properties
+        var canvas = drawingCanvas[1].canvas;
+        canvas.style.height = h + "px";
+        canvas.height = h * canvasScale;
+
+        // update context
+        var ctx = canvas.getContext("2d");
+        ctx.scale(canvasScale, canvasScale);
+        ctx.lineCap   = 'round';
+        ctx.lineWidth = 2;
+
+        // restore previous drawings
+        startPlayback(1);
+
+        // don't propagate event
+        evt.preventDefault(); 
+        evt.stopPropagation();
+        return false; 
     }
 
 
@@ -339,11 +343,13 @@ var RevealChalkboard = (function(){
     function downloadData()
     {
         var a = document.createElement('a');
+        a.classList.add("chalkboard"); // otherwise a.click() is prevented/cancelled by global listener
         document.body.appendChild(a);
         try {
             // function to adjust precision of numbers when converting to JSON
             function twoDigits(key, val) {
-                return val.toFixed ? Number(val.toFixed(2)) : val;
+                if (val != undefined)
+                    return val.toFixed ? Number(val.toFixed(2)) : val;
             }
             var blob = new Blob( [ JSON.stringify( storage, twoDigits ) ], { type: "application/json"} );
 
@@ -356,6 +362,7 @@ var RevealChalkboard = (function(){
 
         } catch( error ) {
             a.innerHTML += " (" + error + ")";
+            console.error("chalkboard download error: " + error);
         }
         a.click();
         document.body.removeChild(a);
@@ -567,7 +574,6 @@ var RevealChalkboard = (function(){
 
         drawingCanvas[1].container.style.visibility = "visible";
         drawingCanvas[1].container.style.pointerEvents = "auto";
-        tool = ToolType.PEN;
     }
 
 
@@ -584,7 +590,6 @@ var RevealChalkboard = (function(){
 
         drawingCanvas[1].container.style.visibility = "hidden";
         drawingCanvas[1].container.style.pointerEvents = "none";
-        tool = ToolType.NONE;
     }
 
 
@@ -925,9 +930,11 @@ var RevealChalkboard = (function(){
 
                 case "touch":
                     showCursor();
+                    evt.preventDefault();
+                    evt.stopPropagation();
                     break;
             }
-        });
+        }, {passive: false});
 
 
         slides.addEventListener( 'pointerup', function(evt) {
