@@ -129,8 +129,8 @@ var RevealChalkboard = (function(){
     var buttonEraser     = createButton(8, 72, "fa-eraser");
     buttonEraser.onclick = function(){ selectTool(ToolType.ERASER); }
 
-    var buttonLaser      = createButton(8, 104, "fa-magic");
-    buttonLaser.onclick  = function(){ selectTool(ToolType.LASER); }
+    //var buttonLaser      = createButton(8, 104, "fa-magic");
+    //buttonLaser.onclick  = function(){ selectTool(ToolType.LASER); }
 
 
     // add color picker to long-tap of buttonPen
@@ -701,7 +701,7 @@ var RevealChalkboard = (function(){
             yLast  = mouseY;
 
             // erase mode
-            if ((tool==ToolType.ERASER) || (evt.buttons == 4))
+            if ((tool==ToolType.ERASER) || (evt.buttons > 1))
             {
                 activeStroke = { type:  "erase", 
                                  coords: [mouseX, mouseY] };
@@ -811,9 +811,9 @@ var RevealChalkboard = (function(){
                             startStroke(evt);
                             break;
 
-                        case ToolType.LASER:
-                            slides.style.cursor = laserCursor;
-                            break;
+                        //case ToolType.LASER:
+                            //slides.style.cursor = laserCursor;
+                            //break;
                     }
                     break;
 
@@ -862,8 +862,8 @@ var RevealChalkboard = (function(){
                                     continueStroke(e);
                             break;
 
-                        case ToolType.LASER:
-                            break;
+                        //case ToolType.LASER:
+                            //break;
                     }
                     break;
 
@@ -895,9 +895,9 @@ var RevealChalkboard = (function(){
                             stopStroke(evt);
                             break;
 
-                        case ToolType.LASER:
-                            slides.style.cursor = 'none';
-                            break;
+                        //case ToolType.LASER:
+                            //slides.style.cursor = 'none';
+                            //break;
                     }
                     break;
 
@@ -919,15 +919,15 @@ var RevealChalkboard = (function(){
                     startStroke(evt);
                     break;
 
-                case ToolType.LASER:
-                    slides.style.cursor = laserCursor;
-                    break;
+                //case ToolType.LASER:
+                    //slides.style.cursor = laserCursor;
+                    //break;
             }
         });
 
 
         slides.addEventListener( 'mousemove', function(evt) {
-		    if (tool && !evt.buttons) showCursor();
+            if (tool && !evt.buttons) { showCursor(); return; }
             switch(tool)
             {
                 case ToolType.PEN:
@@ -935,8 +935,8 @@ var RevealChalkboard = (function(){
                     continueStroke(evt);
                     break;
 
-                case ToolType.LASER:
-                    break;
+                //case ToolType.LASER:
+                    //break;
             }
         });
 
@@ -949,15 +949,14 @@ var RevealChalkboard = (function(){
                     stopStroke(evt);
                     break;
 
-                case ToolType.LASER:
-                    slides.style.cursor = 'none';
-                    break;
+                //case ToolType.LASER:
+                    //slides.style.cursor = 'none';
+                    //break;
             }
         });
 
 
         slides.addEventListener( 'touchstart', function(evt) {
-		    if (tool) showCursor();
             if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
             {
                 // iPad pencil -> draw
@@ -979,15 +978,11 @@ var RevealChalkboard = (function(){
             }
 
             // finger touch -> laser
-            if (tool)
-            {
-                showLaser(evt);
-            }
+            if (tool) showCursor();
         }, true );
 
 
         slides.addEventListener( 'touchmove', function(evt) {
-		    if (tool) showCursor();
             if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
             {
                 // iPad pencil -> draw
@@ -1004,10 +999,7 @@ var RevealChalkboard = (function(){
             }
 
             // finger touch -> laser
-            if (tool)
-            {
-                showLaser(evt);
-            }
+            if (tool) showCursor();
         }, { passive: false });
 
 
@@ -1024,12 +1016,6 @@ var RevealChalkboard = (function(){
                         return;
                     }
                 }
-            }
-
-            // finger touch -> laser
-            if (tool)
-            {
-                hideLaser(evt);
             }
         });
 
@@ -1165,7 +1151,7 @@ var RevealChalkboard = (function(){
 
         // reset icon states
         buttonPen.style.color    = "lightgrey";
-        buttonLaser.style.color  = "lightgrey";
+        //buttonLaser.style.color  = "lightgrey";
         buttonEraser.style.color = "lightgrey";
         buttonBoard.style.color  = "lightgrey";
 
@@ -1188,9 +1174,9 @@ var RevealChalkboard = (function(){
                 buttonEraser.style.color = "#2a9ddf";
                 break;
 
-            case ToolType.LASER:
-                buttonLaser.style.color = "#2a9ddf";
-                break;
+            //case ToolType.LASER:
+                //buttonLaser.style.color = "#2a9ddf";
+                //break;
         }
 
 
