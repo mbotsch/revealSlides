@@ -163,6 +163,7 @@ var RevealChalkboard = (function(){
         // size of slides
         var width  = Reveal.getConfig().width;
         var height = Reveal.getConfig().height;
+        if (id==1) height*=2;
 
         // create canvas
         var canvas = document.createElement( 'canvas' );

@@ -42,6 +42,9 @@ body {
 /*********************************************
  * MARIO: ALIGNMENT & COLUMNS
  *********************************************/
+.reveal .slides {
+    overflow: hidden auto;
+}
 
 .reveal .top {
     vertical-align: top;
