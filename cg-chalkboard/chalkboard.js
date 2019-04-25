@@ -15,7 +15,10 @@ var RevealChalkboard = (function(){
 
     var DEBUG = false;
 
-    var path = scriptPath();
+    /************************************************************************
+     ** Tools
+     ************************************************************************/
+
     function scriptPath()
     {
         // obtain plugin path from the script element
@@ -52,6 +55,8 @@ var RevealChalkboard = (function(){
      ** Configuration options
      ************************************************************************/
 
+    var path = scriptPath();
+
     // default values or user configuration?
     var config     = Reveal.getConfig().chalkboard || {};
     var colors     = config.colors || [ "black", "red", "green", "blue", "yellow", "cyan", "magenta" ];
@@ -66,12 +71,6 @@ var RevealChalkboard = (function(){
     var slideRect   = slides.getBoundingClientRect();
     var slideScroll = 0;
     var canvasScale = window.devicePixelRatio || 1;
-
-
-    // print some infos
-    console.log("HighDPI scaling:  " + canvasScale);
-    console.log("Pointer events:   " + !!(window.PointerEvent));
-    console.log("Coalesced events: " + !!(window.PointerEvent && (new PointerEvent("pointermove")).getCoalescedEvents));
 
 
     // canvas for dynamic cursor generation
@@ -97,6 +96,7 @@ var RevealChalkboard = (function(){
     var boardMode = false;
     var ToolType = { NONE: 0, PEN: 1, ERASER: 2, LASER: 3 };
     var tool = ToolType.NONE;
+    var mode = 0; // 0: draw on slides, 1: draw on whiteboard
 
 
 
@@ -160,7 +160,6 @@ var RevealChalkboard = (function(){
     var drawingCanvas = [ {id: "notescanvas" }, {id: "chalkboard" } ];
     setupDrawingCanvas(0);
     setupDrawingCanvas(1);
-    var mode = 0; // 0: draw on slides, 1: draw on whiteboard
     injectStyleSheet(".reveal .chalkboardContainer { overflow: hidden auto; -webkit-overflow-scrolling: touch; }");
 
     var mouseX = 0;
@@ -239,9 +238,6 @@ var RevealChalkboard = (function(){
             container.style.zIndex = "36";
             container.style.visibility = "hidden";
             container.classList.add("chalkboardContainer");
-
-            // add page on double click
-            canvas.ondblclick = increaseChalkboardHeight;
         }
 
 
@@ -251,16 +247,48 @@ var RevealChalkboard = (function(){
     }
 
 
-    function increaseChalkboardHeight(evt) 
+    function chalkboardHeight() 
+    { 
+        // minimum height: one Reveal page
+        var height = 1;
+
+        // find maximum y-coordinate of slide's curves
+        if (hasSlideData(slideIndices, 1))
+        {
+            var slideData = getSlideData(slideIndices, 1);
+            for (var i=0; i<slideData.events.length; i++)
+            {
+                var event = slideData.events[i];
+                if (event.type == "draw")
+                {
+                    for (var j=1; j<event.coords.length; j+=2)
+                    {
+                        var y = event.coords[j];
+                        if (y > height) height = y;
+                    }
+                }
+            }
+        }
+        
+        height = Math.round(height);
+        if (DEBUG) console.log("slide height: " + height);
+
+        return height;
+    }
+
+
+    function adjustChalkboardHeight() 
     { 
         // compute new page height
-        var h = drawingCanvas[1].height + Reveal.getConfig().height;
-        drawingCanvas[1].height = h
+        var pageHeight = Reveal.getConfig().height;
+        var height = Math.round(chalkboardHeight() + pageHeight/2);
+        if (height < pageHeight) height = pageHeight;
+        if (DEBUG) console.log("set slide height to " + height);
 
         // set canvas properties
         var canvas = drawingCanvas[1].canvas;
-        canvas.style.height = h + "px";
-        canvas.height = h * canvasScale;
+        canvas.style.height = height + "px";
+        canvas.height = height * canvasScale;
 
         // update context
         var ctx = canvas.getContext("2d");
@@ -268,13 +296,7 @@ var RevealChalkboard = (function(){
         ctx.lineCap   = 'round';
         ctx.lineWidth = 2;
 
-        // restore previous drawings
-        startPlayback(1);
-
-        // don't propagate event
-        evt.preventDefault(); 
-        evt.stopPropagation();
-        return false; 
+        // remember to restore previous drawings with playbackEvents(1)!
     }
 
 
@@ -633,34 +655,22 @@ var RevealChalkboard = (function(){
     }
 
 
-    function startPlayback( finalMode )
+    function playbackEvents( id )
     {
-        closeChalkboard();
-        mode = 0;
-        for ( var id = 0; id < 2; id++ )
-        {
-            clearCanvas( id );
+        clearCanvas( id );
 
-            /* MARIO: don't just call getSlideData, since it pushed slide data when nothing is found
-               which somehow inserts black slides for printing */
-            if (hasSlideData( slideIndices, id ))
+        if (hasSlideData( slideIndices, id))
+        {
+            var slideData = getSlideData( slideIndices, id );
+            var index = 0;
+            while ( index < slideData.events.length )
             {
-                var slideData = getSlideData( slideIndices, id );
-                var index = 0;
-                while ( index < slideData.events.length )
-                {
-                    playEvent( id, slideData.events[index] );
-                    index++;
-                }
+                playEvent( id, slideData.events[index] );
+                index++;
             }
         }
-
-        if ( finalMode != undefined )
-        {
-            mode = finalMode;
-        }
-        if( mode == 1 ) showChalkboard();
     };
+
 
 
     function playEvent( id, event )
@@ -841,6 +851,12 @@ var RevealChalkboard = (function(){
 
             recordEvent( activeStroke );
             activeStroke = null;
+
+            if (mode==1) 
+            {
+                adjustChalkboardHeight();
+                playbackEvents(1);
+            }
         }
 
         // reset cursor
@@ -1106,8 +1122,8 @@ var RevealChalkboard = (function(){
 
 
     window.addEventListener( "resize", function() {
-        // Resize the canvas and draw everything again
-        startPlayback( mode );
+        playbackEvents( 0 );
+        playbackEvents( 1 );
     } );
 
 
@@ -1116,7 +1132,9 @@ var RevealChalkboard = (function(){
         if ( !printMode ) 
         {
             slideIndices = Reveal.getIndices();
-            startPlayback( 0 );
+            adjustChalkboardHeight();
+            playbackEvents( 0 );
+            playbackEvents( 1 );
         }
     });
 
@@ -1125,9 +1143,9 @@ var RevealChalkboard = (function(){
         if ( !printMode ) {
             slideIndices = Reveal.getIndices();
             closeChalkboard();
-            clearCanvas( 0 );
-            clearCanvas( 1 );
-            startPlayback( 0 );
+            adjustChalkboardHeight();
+            playbackEvents( 0 );
+            playbackEvents( 1 );
         }
     });
 
@@ -1136,9 +1154,9 @@ var RevealChalkboard = (function(){
         if ( !printMode ) {
             slideIndices = Reveal.getIndices();
             closeChalkboard();
-            clearCanvas( 0 );
-            clearCanvas( 1 );
-            startPlayback( 0 );
+            adjustChalkboardHeight();
+            playbackEvents( 0 );
+            playbackEvents( 1 );
         }
     });
 
@@ -1147,10 +1165,9 @@ var RevealChalkboard = (function(){
         if ( !printMode ) {
             slideIndices = Reveal.getIndices();
             closeChalkboard();
-            clearCanvas( 0 );
-            clearCanvas( 1 );
-            startPlayback();
-            closeChalkboard();
+            adjustChalkboardHeight();
+            playbackEvents( 0 );
+            playbackEvents( 1 );
         }
     });
 
@@ -1325,7 +1342,7 @@ var RevealChalkboard = (function(){
         {
             var slideData = getSlideData( slideIndices, mode );
             slideData.events.pop();
-            startPlayback( mode );
+            playbackEvents( mode );
         }
     }
 
@@ -1371,6 +1388,12 @@ var RevealChalkboard = (function(){
 
 	return {
 		init: function() { 
+
+            // print some infos
+            console.log("HighDPI scaling:  " + canvasScale);
+            console.log("Pointer events:   " + !!(window.PointerEvent));
+            console.log("Coalesced events: " + !!(window.PointerEvent && (new PointerEvent("pointermove")).getCoalescedEvents));
+
             return new Promise( function(resolve) {
                 
                 if (printMode)
