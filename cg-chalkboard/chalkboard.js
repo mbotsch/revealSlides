@@ -331,14 +331,24 @@ var RevealChalkboard = (function(){
 
             req.onload = function()
             {
-                if (req.readyState === 4) 
+                if (req.readyState == 4)
                 {
-                    storage = JSON.parse(req.responseText);
-                    if ( drawingCanvas[0].width != storage[0].width || drawingCanvas[0].height != storage[0].height )
+                    if (req.status == 200 || req.status == 0)
                     {
-                        alert("Chalkboard: Loaded data does not match width/height of presentation");
+                        try
+                        {
+                            storage = JSON.parse(req.responseText);
+                            if ( drawingCanvas[0].width != storage[0].width || drawingCanvas[0].height != storage[0].height )
+                            {
+                                alert("Chalkboard: Loaded data does not match width/height of presentation");
+                            }
+                            console.log("chalkboard loaded");
+                        }
+                        catch(err)
+                        {
+                            console.error("Cannot parse " + filename + ": " + err);
+                        }
                     }
-                    console.log("chalkboard loaded");
                 }
                 else
                 {
@@ -353,8 +363,15 @@ var RevealChalkboard = (function(){
                 resolve();
             }
 
-            req.open('GET', filename, true);
-            req.send();
+            try
+            {
+                req.open('GET', filename, true);
+                req.send();
+            }
+            catch(err)
+            {
+                console.warn('Failed to get file ' + filename + ': ' + err);
+            }
         });
     }
 
