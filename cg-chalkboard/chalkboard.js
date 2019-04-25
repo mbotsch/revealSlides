@@ -160,7 +160,7 @@ var RevealChalkboard = (function(){
     var drawingCanvas = [ {id: "notescanvas" }, {id: "chalkboard" } ];
     setupDrawingCanvas(0);
     setupDrawingCanvas(1);
-    injectStyleSheet(".reveal .chalkboardContainer { overflow: hidden auto; -webkit-overflow-scrolling: touch; }");
+    injectStyleSheet(".reveal .chalkboardContainer { overflow-x: hidden; overflow-y: scroll; -webkit-overflow-scrolling: touch; }");
 
     var mouseX = 0;
     var mouseY = 0;
