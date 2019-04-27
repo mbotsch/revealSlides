@@ -150,6 +150,7 @@ var RevealQuiz = window.RevealQuiz || (function(){
             ballotState = "not_init";
 
             // is this a quiz slide? -> find answers
+            // this is the OLD version, which should be deprecated sometime
             var answers = Reveal.getCurrentSlide().getElementsByClassName('answer');
             if (answers.length)
             {
@@ -161,6 +162,26 @@ var RevealQuiz = window.RevealQuiz || (function(){
                     answers[i].addEventListener('click', function() {
                         if (this.classList.contains("wrong")) this.classList.add("show-wrong");
                         if (this.classList.contains("right")) this.classList.add("show-right");
+                    }, false);
+                }
+
+                // setup timer for showing #votes
+                timerVotes  = setInterval(getVotes, 1000);
+                timerStatus = setInterval(getStatus, 1000);
+            }
+
+            // is this a quiz slide? -> find answers (new version)
+            answers = Reveal.getCurrentSlide().querySelectorAll('.quiz li');
+            if (answers.length)
+            {
+                // hide answers' right/wrong classification
+                for (i = 0; i < answers.length; i++)
+                {
+                    answers[i].classList.remove('show-right');
+                    answers[i].classList.remove('show-wrong');
+                    answers[i].addEventListener('click', function() {
+                        var correct = this.querySelector('input:checked');
+                        this.classList.add( correct ? "show-right" : "show-wrong" );
                     }, false);
                 }
 
