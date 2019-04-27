@@ -1,0 +1,17 @@
+{
+  "name": "slide-build",
+  "version": "1.0.0",
+  "description": "Build slides by calling 'make' on file change and trigger browser reload",
+  "main": "gruntfile.js",
+  "scripts": {
+    "start": "grunt"
+  },
+  "author": "Mario Botsch",
+  "license": "ISC",
+  "devDependencies": {
+    "grunt": "^1.0.4",
+    "grunt-contrib-connect": "^2.0.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-exec": "^3.0.0"
+  }
+}

@@ -592,64 +592,6 @@ body {
 
 
 /*********************************************
- * MARIO: WER WIRD MILLIONAER
- *********************************************/
-
-.reveal .slides > section {
-  counter-reset: wwm-counter;
-}
-
-.reveal .answer {
-    display:  inline-block;
-    position: relative;
-    width:    400px;
-    text-align: left;
-    margin:   20px;
-    border:   3px solid #2a9ddf;
-    border-radius: 20px;
-    padding:  20px;
-    font-weight: normal;
-    color:    black;
-}
-
-.reveal .answer:before {
-  content: counter(wwm-counter, upper-latin) ": ";
-  counter-increment: wwm-counter;
-  margin-right: 0.5em;
-  font-weight: bold;
-}
-
-.reveal .tooltip {
-    visibility: hidden;
-    max-width: 390px;
-    top:        100%;
-    background-color: grey;
-    color:      #ffffff;
-    text-align: center;
-    padding:    5px;
-    border-radius: 6px;
-    position:   absolute;
-    z-index: 1;
-    font-size: 1rem;
-}
-
-.reveal .show-wrong {
-    background-color: #ffaaaa;
-    border: 3px solid red;
-}
-
-.reveal .show-right {
-    background-color: #aaffaa;
-    border: 3px solid green;
-}
-
-.reveal .show-wrong:hover .tooltip, .reveal .show-right:hover .tooltip {
-    visibility: visible;
-}
-
-
-
-/*********************************************
  * MARIO: COMMENT BUBBLES
  *********************************************/
 
@@ -788,3 +730,148 @@ body {
     border-radius: 100%;
     opacity: 0.7;
 }
+
+
+/*********************************************
+ * MARIO: Task lists
+ *********************************************/
+
+.reveal li input[type="checkbox"] {
+    visibility: hidden;
+    vertical-align: top;
+    margin-right: 1em;
+}
+.reveal li input[type="checkbox"]::before {
+    visibility: visible;
+    opacity: 1;
+    font-weight: bold;
+    font-size: 200%;
+    color: red; 
+    content: "✗";
+}
+.reveal li input[type="checkbox"]:checked::before {
+    color: green; 
+    content: "✓";
+}
+
+/* Firefox doesn't suppprt ::after for <input>,
+ * so we disable the above */
+@-moz-document url-prefix() {
+    .reveal li input[type="checkbox"] {
+        visibility: visible;
+        vertical-align: middle;
+    }
+}
+
+
+/*********************************************
+ * MARIO: Quizzes with task list syntax
+ *********************************************/
+
+.reveal .quiz ul {
+    text-align: center;
+    list-style-type: upper-latin;
+    counter-reset: answer;
+}
+
+.reveal .quiz ul li {
+    display:       inline-block;
+    position:      relative;
+    width:         400px;
+    text-align:    left;
+    margin:        20px;
+    border:        3px solid #2a9ddf;
+    border-radius: 20px;
+    padding:       20px;
+    font-weight:   normal;
+    color:         black;
+}
+
+.reveal .quiz ul li:before {
+    content: counter(answer, upper-latin) ": ";
+    counter-increment: answer;
+    margin-right: 0.5em;
+    font-weight:  bold;
+}
+
+.reveal .quiz ul li input[type="checkbox"] {
+    display: none;
+}
+
+.reveal .quiz .tip {
+    display:          block;
+    visibility:       hidden;
+    max-width:        390px;
+    top:              100%;
+    background-color: grey;
+    color:            #ffffff;
+    text-align:       center;
+    padding:          5px;
+    border-radius:    6px;
+    position:         absolute;
+    z-index:          1;
+    font-size:        1rem;
+}
+
+.reveal .show-wrong {
+    background-color: #ffaaaa;
+    border:           3px solid red;
+}
+
+.reveal .show-right {
+    background-color: #aaffaa;
+    border:           3px solid green;
+}
+
+.reveal .show-wrong:hover .tip, 
+.reveal .show-right:hover .tip {
+    visibility: visible;
+}
+
+
+/* old quiz stuff below (delete it later...) */
+
+.reveal .slides > section {
+  counter-reset: wwm-counter;
+}
+
+.reveal .answer {
+    display:  inline-block;
+    position: relative;
+    width:    400px;
+    text-align: left;
+    margin:   20px;
+    border:   3px solid #2a9ddf;
+    border-radius: 20px;
+    padding:  20px;
+    font-weight: normal;
+    color:    black;
+}
+
+.reveal .answer:before {
+  content: counter(wwm-counter, upper-latin) ": ";
+  counter-increment: wwm-counter;
+  margin-right: 0.5em;
+  font-weight: bold;
+}
+
+.reveal .tooltip {
+    display: block;
+    visibility: hidden;
+    max-width: 390px;
+    top:        100%;
+    background-color: grey;
+    color:      #ffffff;
+    text-align: center;
+    padding:    5px;
+    border-radius: 6px;
+    position:   absolute;
+    z-index: 1;
+    font-size: 1rem;
+}
+
+.reveal .show-wrong:hover .tooltip, .reveal .show-right:hover .tooltip {
+    visibility: visible;
+}
+
+
