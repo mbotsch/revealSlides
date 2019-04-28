@@ -1,4 +1,6 @@
-var RevealQuiz = window.RevealQuiz || (function(){
+"use strict";
+
+var RevealQuiz = (function(){
 
     // state of ballot server: "not_init", "open", "closed"
     var serverState;
@@ -127,8 +129,7 @@ var RevealQuiz = window.RevealQuiz || (function(){
     }
 
 
-    // un-show answers on slide-change
-    Reveal.addEventListener( 'slidechanged', slideChanged );
+    // what to do on slide change
     function slideChanged()
     {
         // if not presenter displayw slide preview
@@ -171,11 +172,11 @@ var RevealQuiz = window.RevealQuiz || (function(){
             }
 
             // is this a quiz slide? -> find answers (new version)
-            answers = Reveal.getCurrentSlide().querySelectorAll('.quiz li');
+            answers = Reveal.getCurrentSlide().querySelectorAll('.reveal .quiz ul li');
             if (answers.length)
             {
                 // hide answers' right/wrong classification
-                for (i = 0; i < answers.length; i++)
+                for (var i = 0; i < answers.length; i++)
                 {
                     answers[i].classList.remove('show-right');
                     answers[i].classList.remove('show-wrong');
@@ -191,6 +192,7 @@ var RevealQuiz = window.RevealQuiz || (function(){
             }
         }
     }
+
 
 
     // ballot stuff (needs authentication) -----------------------------------
@@ -406,9 +408,24 @@ var RevealQuiz = window.RevealQuiz || (function(){
     }
 
 
-    // setup keyboard shortcut
-    Reveal.removeKeyBinding( 81 );
-    Reveal.addKeyBinding( { keyCode: 81, key: 'Q', description: 'Toggle Quiz' }, switchBallotState );
 
-	return this;
+	return {
+		init: function() { 
+            return new Promise( function(resolve) {
+                
+                // setup keyboard shortcut
+                Reveal.removeKeyBinding( 81 );
+                Reveal.addKeyBinding( { keyCode: 81, key: 'Q', description: 'Toggle Quiz' }, switchBallotState );
+
+                // add event listener
+                Reveal.addEventListener( 'slidechanged', slideChanged );
+
+                resolve();
+            });
+        }
+    }
+
 })();
+
+Reveal.registerPlugin( 'quiz', RevealQuiz );
+
