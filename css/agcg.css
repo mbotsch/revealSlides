@@ -650,17 +650,25 @@ body {
  * either use footer tag or class
  *********************************************/
 
-.reveal footer, .reveal .footer {
-    position: absolute;
-    display: block;
+.reveal footer, 
+.reveal .footer {
+    position:   absolute;
+    display:    block;
     text-align: center;
-	margin: 0px auto;
+	margin:     0px;
+    padding:    0px;
+    font-size:  0.5em;
+    width:      auto;
+    height:     auto;
+    left:       100px;
+    right:      100px;
+    bottom:     0px;
+}
+
+.reveal footer p,
+.reveal .footer p {
+	margin:  0px;
     padding: 0px;
-    font-size: 0.5em;
-    left: 100px;
-    right: 100px;
-    bottom: 0.5em;
-    height: 0.5em;
 }
 
 

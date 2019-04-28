@@ -8,13 +8,6 @@
     height: auto;
 }
 
-.reveal footer {
-    position: absolute;
-	display: block;
-	overflow: visible;
-	margin: auto;
-}
-
 .reveal .slide-number {
   visibility: hidden;
 }
