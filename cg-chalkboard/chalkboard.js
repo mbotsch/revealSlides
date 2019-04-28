@@ -431,8 +431,10 @@ var RevealChalkboard = (function(){
     /*
      * return height of current scribbles (max y-coordinate)
      */
-    function chalkboardHeight() 
+    function chalkboardHeight( indices ) 
     { 
+        if (!indices) indices = slideIndices;
+
         // minimum height: one Reveal page
         var height = 1;
 
@@ -773,7 +775,7 @@ var RevealChalkboard = (function(){
 
     function createPrintout( )
     {
-        console.log("chalkboard create printout");
+        console.log("chalkboard: create printout");
 
         var nextSlide = [];
         var width   = Reveal.getConfig().width;
@@ -801,16 +803,24 @@ var RevealChalkboard = (function(){
 
             var parent = Reveal.getSlide( storage[1].data[i].slide.h, storage[1].data[i].slide.v ).parentElement;
 
+            // adjust slide height to be multiple of pageHeight and to fit slideHeight
+            var pageHeight  = height;
+            var slideHeight = Math.max(pageHeight, chalkboardHeight( storage[1].data[i].slide ));
+            var height = pageHeight * (Math.ceil(slideHeight/pageHeight));
+
+            // generate image canvas
             var imgCanvas = document.createElement('canvas');
             imgCanvas.width  = width;
             imgCanvas.height = height;
 
+            // setup image context
             var imgCtx = imgCanvas.getContext("2d");
             imgCtx.fillStyle = "white";
             penColor = "black";
             imgCtx.rect(0,0,imgCanvas.width,imgCanvas.height);
             imgCtx.fill();
 
+            // draw strokes to image
             for (var j = 0; j < slideData.events.length; j++)
             {
                 switch ( slideData.events[j].type )
@@ -867,6 +877,10 @@ var RevealChalkboard = (function(){
                 newSlide.setAttribute("data-background-size", '100% 100%' );
                 newSlide.setAttribute("data-background-repeat", 'norepeat' );
                 newSlide.setAttribute("data-background", 'url("' + imgCanvas.toDataURL("image/png") +'")' );
+
+                // create oversize slide, which Reveal breaks down into multiple PDF pages
+                newSlide.style.height = imgCanvas.height + "px";
+
                 if ( nextSlide[i] != null ) {
                     parent.insertBefore( newSlide, nextSlide[i] );
                 }
