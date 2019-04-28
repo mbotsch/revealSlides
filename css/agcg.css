@@ -821,12 +821,12 @@ body {
     font-size:        1rem;
 }
 
-.reveal .show-wrong {
+.reveal .quiz ul li.show-wrong {
     background-color: #ffaaaa;
     border:           3px solid red;
 }
 
-.reveal .show-right {
+.reveal .quiz ul li.show-right {
     background-color: #aaffaa;
     border:           3px solid green;
 }
@@ -876,6 +876,16 @@ body {
     position:   absolute;
     z-index: 1;
     font-size: 1rem;
+}
+
+.reveal .show-wrong {
+    background-color: #ffaaaa;
+    border:           3px solid red;
+}
+
+.reveal .show-right {
+    background-color: #aaffaa;
+    border:           3px solid green;
 }
 
 .reveal .show-wrong:hover .tooltip, .reveal .show-right:hover .tooltip {
