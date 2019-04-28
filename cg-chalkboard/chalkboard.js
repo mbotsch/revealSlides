@@ -8,8 +8,9 @@
  *  License: MIT license (see LICENSE.md)
  ******************************************************************/
 
-/* Chrome bug: for scrolling chalkboard on Chrome, disable threaded scrolling in chrome://flags
- */
+
+"use strict";
+
 
 var RevealChalkboard = (function(){
 
@@ -19,6 +20,9 @@ var RevealChalkboard = (function(){
      ** Tools
      ************************************************************************/
 
+    /*
+     * return path to this script
+     */
     function scriptPath()
     {
         // obtain plugin path from the script element
@@ -38,21 +42,10 @@ var RevealChalkboard = (function(){
     }
 
 
-	function injectStyleSheet( value ) {
-		var tag = document.createElement( 'style' );
-		tag.type = 'text/css';
-		if( tag.styleSheet ) {
-			tag.styleSheet.cssText = value;
-		}
-		else {
-			tag.appendChild( document.createTextNode( value ) );
-		}
-		document.getElementsByTagName( 'head' )[0].appendChild( tag );
-	}
 
 
     /************************************************************************
-     ** Configuration options
+     ** Configuration options, global variables
      ************************************************************************/
 
     var path = scriptPath();
@@ -72,7 +65,6 @@ var RevealChalkboard = (function(){
     var slideScroll = 0;
     var canvasScale = window.devicePixelRatio || 1;
 
-
     // canvas for dynamic cursor generation
     var cursorCanvas = document.createElement( 'canvas' );
     cursorCanvas.id     = "CursorCanvas";
@@ -84,13 +76,9 @@ var RevealChalkboard = (function(){
     var eraserRadius = 15;
     var laserCursor;
     var penCursor;
+    var currentCursor;
     var penColor  = "red";
     var color = [ "red", "black" ]; // old color handling
-
-    // auto-hide cursor
-    var cursorInactiveTimeout;
-    var hideCursorTime = 1000; // 1 sec
-
 
     // store which tools are active
     var boardMode = false;
@@ -98,14 +86,32 @@ var RevealChalkboard = (function(){
     var tool = ToolType.NONE;
     var mode = 0; // 0: draw on slides, 1: draw on whiteboard
 
+    // mouse cordinates for drawing
+    var mouseX = 0;
+    var mouseY = 0;
+    var xLast = null;
+    var yLast = null;
+    var activeStroke = null;
+
+    // variable used to block leaving HTML page
+    var needSave = false;
+
+    // current slide's indices
+    var slideIndices =  { h:0, v:0 };
+
+    // is the user generating a PDF?
+    var printMode = ( /print-pdf/gi ).test( window.location.search );
+
 
 
 
     /************************************************************************
-     ** Setup GUI
+     * Setup GUI
      ************************************************************************/
 
-    // create button on the left side
+    /*
+     * create a button on the left side
+     */
     function createButton(left, bottom, icon)
     {
         var b = document.createElement( 'div' );
@@ -151,64 +157,83 @@ var RevealChalkboard = (function(){
     pkdiv.setAttribute("class", "color-picker");
     var pkoptions = { template: "<div class=\"chalkboard\" data-col=\"{color}\" style=\"background-color: {color}\"></div>" };
     var pk = new Piklor(pkdiv, colors, pkoptions);
-    pk.colorChosen(function (col) { penColor = col; tool=ToolType.NONE; selectTool(ToolType.PEN); updateCursor(); });
+    pk.colorChosen(function (col) { penColor = col; updateGUI(); });
     var pktimer;
     buttonPen.onmousedown = function(){ pktimer = setTimeout(function(){pk.open();}, 500); }
+
+
+    // create container for canvases
+    var container = document.createElement( 'div' );
+    container.setAttribute( 'data-prevent-swipe', '' );
+    container.style.transition = "none";
+    container.style.margin     = "0";
+    container.style.padding    = "0";
+    container.style.border     = "1px solid transparent";
+    container.style.boxSizing  = "content-box";
+    container.style.position   = "absolute";
+    container.style.top        = "0px";
+    container.style.left       = "0px";
+    container.style.width      = "100%";
+    container.style.height     = "100%";
+    container.style.maxHeight  = "100%";
+    container.style.zIndex = "34";
+    container.style.pointerEvents = "none";
+    container.style.overflowX = 'hidden';
+    container.style.overflowY = 'hidden';
+    container.style.WebkitOverflowScrolling = 'auto';
+    slides.appendChild( container );
 
 
     // create canvases
     var drawingCanvas = [ {id: "notescanvas" }, {id: "chalkboard" } ];
     setupDrawingCanvas(0);
     setupDrawingCanvas(1);
-    injectStyleSheet(".reveal .chalkboardContainer { overflow-x: hidden; overflow-y: scroll; -webkit-overflow-scrolling: touch; }");
 
-    var mouseX = 0;
-    var mouseY = 0;
-    var xLast = null;
-    var yLast = null;
-
-    var slideIndices =  { h:0, v:0 };
-    var activeStroke = null;
-
-
-    // generate one of the two canvases
+    /*
+     * create a drawing canvas
+     */
     function setupDrawingCanvas( id )
     {
         // size of slides
         var width  = Reveal.getConfig().width;
         var height = Reveal.getConfig().height;
 
-        // div wrapper
-        var container = document.createElement( 'div' );
-        container.setAttribute( 'data-prevent-swipe', '' );
-        container.style.transition = "none";
-        container.style.margin     = "0";
-        container.style.padding    = "0";
-        container.style.border     = "none";
-        container.style.position   = "absolute";
-        container.style.top        = "0px";
-        container.style.left       = "0px";
-        container.style.width      = "100%";
-        container.style.height     = "100%";
-        container.style.maxHeight  = "100%";
-        
         // create canvas
         var canvas = document.createElement( 'canvas' );
         canvas.setAttribute( 'data-prevent-swipe', '' );
         canvas.style.background = id==0 ? "rgba(0,0,0,0)" : background;
-        canvas.style.border     = "1px solid transparent";
+        canvas.style.border     = "none";
         canvas.style.boxSizing  = "border-box";
         canvas.style.position   = "relative";
         canvas.style.width      = "100%";
         canvas.style.height     = height + "px";
         canvas.width            = width  * canvasScale;
         canvas.height           = height * canvasScale;
+        canvas.style.position = "absolute";
+        canvas.style.top = "0px";
+        canvas.style.left = "0px";
 
         // setup highDPI scaling & draw style
         var ctx = canvas.getContext("2d");
         ctx.scale(canvasScale, canvasScale);
         ctx.lineCap   = 'round';
         ctx.lineWidth = 2;
+
+        // differences between the two canvases
+        if ( id == "0" )
+        {
+            canvas.id = 'drawOnSlides';
+            canvas.style.zIndex = "34";
+        }
+        else
+        {
+            canvas.id = 'drawOnBoard';
+            canvas.style.zIndex = "36";
+            canvas.style.visibility = "hidden";
+        }
+
+        // add canvas to container
+        container.appendChild( canvas );
 
         // store relevant information
         drawingCanvas[id].canvas    = canvas;
@@ -217,36 +242,195 @@ var RevealChalkboard = (function(){
         drawingCanvas[id].width     = width;
         drawingCanvas[id].height    = height;
 
-        // prevent context menu and double-click
-        canvas.oncontextmenu = function() { return false; }
-        canvas.ondblclick = function(evt) { 
-            evt.preventDefault(); 
-            evt.stopPropagation();
-            return false; 
-        }
-
-
-        if ( id == "0" )
-        {
-            canvas.id = 'drawOnSlides';
-            container.style.zIndex = "34";
-            container.style.pointerEvents = "none";
-        }
-        else
-        {
-            canvas.id = 'drawOnBoard';
-            container.style.zIndex = "36";
-            container.style.visibility = "hidden";
-            container.classList.add("chalkboardContainer");
-        }
-
-
-        // add div to reveal.slides
-        slides.appendChild( container );
-        container.appendChild( canvas );
+        // prevent accidential click, double-click, and context menu
+        canvas.oncontextmenu = killEvent;
+        canvas.ondblclick    = killEvent;
+        canvas.onclick       = killEvent;
     }
 
 
+    /*
+     * ignore this event, and don't propagate it further
+     */
+    function killEvent(evt)
+    {
+        evt.preventDefault(); 
+        evt.stopPropagation();
+        return false; 
+    }
+
+
+
+    /*****************************************************************
+     * Interal GUI functions related to mouse cursor
+     ******************************************************************/
+
+    /*
+     * adjust laser and pen cursor to have current color
+     */
+    function updateCursor()
+    {
+        // convert penColor to rgb
+        var elem = document.body.appendChild(document.createElement('fictum'));
+        elem.style.color = penColor;
+        var color = getComputedStyle(elem).color;
+        var rgb = color.substring(color.indexOf('(')+1, color.lastIndexOf(')')).split(/,\s*/);
+        document.body.removeChild(elem);
+
+        // setup pen color with alpha=255 and alpha=0
+        var col1 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",255)";
+        var col2 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",128)";
+        var col3 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",0)";
+
+        var ctx  = cursorCanvas.getContext("2d");
+
+        // render pen cursor
+        var grdPen   = ctx.createRadialGradient(10, 10, 1, 10, 10, 3);
+        grdPen.addColorStop(0, col1);
+        grdPen.addColorStop(1, col3);
+        ctx.clearRect(0, 0, 20, 20); 
+        ctx.fillStyle = grdPen;
+        ctx.fillRect(0, 0, 20, 20);
+        penCursor = "url(" + cursorCanvas.toDataURL() + ") 10 10, auto";
+
+        // render laser cursor
+        var grdLaser = ctx.createRadialGradient(10, 10, 1, 10, 10, 10);
+        grdLaser.addColorStop(0, col2);
+        grdLaser.addColorStop(1, col3);
+        ctx.clearRect(0, 0, 20, 20); 
+        ctx.fillStyle = grdLaser;
+        ctx.fillRect(0, 0, 20, 20);
+        laserCursor = "url(" + cursorCanvas.toDataURL() + ") 10 10, auto";
+
+        // reset cursor
+        container.style.cursor = tool ? 'none' : '';
+    }
+
+
+    // select a cursor
+    function selectCursor(cur)
+    {
+        currentCursor = cur;
+    }
+
+    // select cursor after 2 sec
+    var selectCursorTimeout;
+	function triggerSelectCursor(cur) 
+    {
+        clearTimeout( selectCursorTimeout );
+        selectCursorTimeout = setTimeout( function() { selectCursor(cur); }, 2000 );
+    }
+
+    // show currently selected cursor
+	function showCursor(cur)
+    {
+        if (cur != undefined) selectCursor(cur);
+        container.style.cursor = currentCursor;
+	}
+
+    // hide cursor
+	function hideCursor() 
+    {
+        container.style.cursor='none';
+    }
+
+    // hide cursor after 1 sec
+    var hideCursorTimeout;
+	function triggerHideCursor() 
+    {
+        clearTimeout( hideCursorTimeout );
+        hideCursorTimeout = setTimeout( hideCursor, 1000 );
+    }
+
+
+
+    /*****************************************************************
+     * Internal GUI functions (not called by user)
+     ******************************************************************/
+
+    /*
+     * select active tool (pen, eraser, laser pointer)
+     * and update GUI (which updates cursor)
+     */
+    function selectTool(newTool)
+    {
+        tool = (tool==newTool ? ToolType.NONE : newTool);
+        updateGUI();
+    }
+
+
+    /*
+     * Update GUI:
+     * update icons based on selected tool
+     * generate pen and laser cursors based on selected color
+     * select cursor based on selected tool
+     * enable/disable canvas pointerEvents
+     */
+    function updateGUI()
+    {
+        if (printMode) return;
+
+
+        // update cursor using current color
+        updateCursor();
+
+
+        // reset icon states
+        buttonPen.style.color    = "lightgrey";
+        //buttonLaser.style.color  = "lightgrey";
+        buttonEraser.style.color = "lightgrey";
+        buttonBoard.style.color  = "lightgrey";
+
+
+        // set board button
+        if (boardMode)
+            buttonBoard.style.color  = "#2a9ddf";
+        else if (hasSlideData(Reveal.getIndices(), 1))
+            buttonBoard.style.color = "red";
+
+
+        // highlight active tool icon
+        // select cursor
+        switch (tool)
+        {
+            case ToolType.PEN:
+                buttonPen.style.color = "#2a9ddf";
+                selectCursor(laserCursor);
+                break;
+
+            case ToolType.ERASER:
+                buttonEraser.style.color = "#2a9ddf";
+                selectCursor(eraserCursor);
+                break;
+
+            //case ToolType.LASER:
+                //buttonLaser.style.color = "#2a9ddf";
+                //break;
+
+            case ToolType.NONE:
+                clearTimeout( hideCursorTimeout );
+                clearTimeout( selectCursorTimeout );
+                selectCursor('');
+                break;
+        }
+
+
+        // canvas setup
+        if (tool)
+        {
+            container.style.border = "1px solid " + penColor;
+            drawingCanvas[mode].canvas.style.pointerEvents = "auto";
+        }
+        else
+        {
+            container.style.border = "1px solid transparent";
+            drawingCanvas[mode].canvas.style.pointerEvents = "none";
+        }
+    }
+
+    /*
+     * return height of current scribbles (max y-coordinate)
+     */
     function chalkboardHeight() 
     { 
         // minimum height: one Reveal page
@@ -277,6 +461,9 @@ var RevealChalkboard = (function(){
     }
 
 
+    /*
+     * adjust board height to max. scribbles plus half a page
+     */
     function adjustChalkboardHeight() 
     { 
         // compute new page height
@@ -290,8 +477,13 @@ var RevealChalkboard = (function(){
         canvas.style.height = height + "px";
         canvas.height = height * canvasScale;
 
+        // adjust canvas width to css width, which might change due to scrollbar
+        var width = canvas.clientWidth;
+        canvas.width = width * canvasScale;
+        if (DEBUG) console.log("set slide width to " + width);
+
         // update context
-        var ctx = canvas.getContext("2d");
+        var ctx = drawingCanvas[1].context;
         ctx.scale(canvasScale, canvasScale);
         ctx.lineCap   = 'round';
         ctx.lineWidth = 2;
@@ -302,8 +494,127 @@ var RevealChalkboard = (function(){
 
 
     /*****************************************************************
+     * Public GUI functions that can be triggered by user
+     ******************************************************************/
+    
+    /* 
+     * User wants to clear current slide (mapped to key Delete)
+     */
+    function clearSlide()
+    {
+        var ok = confirm("Delete notes and board on this slide?");
+        if ( ok )
+        {
+            activeStroke = null;
+            closeChalkboard();
+
+            clearCanvas( 0 );
+            clearCanvas( 1 );
+
+            mode = 1;
+            var slideData = getSlideData();
+            slideData.events = [];
+
+            mode = 0;
+            var slideData = getSlideData();
+            slideData.events = [];
+        }
+    };
+
+
+    /*
+     * User triggers PDF export (mapped to key 'p')
+     */
+    function pdfExport()
+    {
+        if (confirm("Leave/reload presentation to export PDF?"))
+        {
+            window.open("?print-pdf","_self")
+        }
+    }
+
+
+    /*
+     * User triggers undo (mapped to key 'z')
+     */
+    function drawUndo()
+    {
+        if (hasSlideData( slideIndices, mode ))
+        {
+            var slideData = getSlideData( slideIndices, mode );
+            slideData.events.pop();
+            playbackEvents( mode );
+        }
+    }
+
+
+    /*
+     * Toggle chalkboard visibility (mapped to 't')
+     */
+    function toggleChalkboard()
+    {
+        if ( boardMode )
+        {
+            closeChalkboard();
+        }
+        else
+        {
+            showChalkboard();
+        }
+        updateGUI();
+    };
+
+
+    /**
+     * Opens an overlay for the chalkboard.
+     */
+    function showChalkboard()
+    {
+        xLast        = null;
+        yLast        = null;
+        activeStroke = null;
+        mode         = 1;
+        boardMode    = true;
+
+        // set container to board mode
+        container.style.pointerEvents = "auto";
+        container.style.overflowX     = "hidden";
+        container.style.overflowY     = "scroll";
+
+        // show board, adjust height, re-draw scribbles
+        drawingCanvas[1].canvas.style.visibility = "visible";
+        adjustChalkboardHeight();
+        playbackEvents(1);
+    }
+
+
+    /**
+     * Closes open chalkboard.
+     */
+    function closeChalkboard()
+    {
+        xLast        = null;
+        yLast        = null;
+        activeStroke = null;
+        mode         = 0;
+        boardMode    = false;
+
+        // hide board
+        drawingCanvas[1].canvas.style.visibility = "hidden";
+
+        // set container to slides mode
+        container.style.pointerEvents = "none";
+        container.style.overflow = "hidden";
+        container.scrollTop = "0px";
+    }
+
+
+
+
+    /*****************************************************************
      ** Storage
      ******************************************************************/
+
     var storage = [
         { width: drawingCanvas[0].width,
           height: drawingCanvas[0].height,
@@ -314,8 +625,9 @@ var RevealChalkboard = (function(){
     ];
 
 
-    /**
-     * Load data.
+    /*
+     * load scribbles from file
+     * use Promise to ensure loading in init()
      */
     function loadData( filename )
     {
@@ -376,8 +688,8 @@ var RevealChalkboard = (function(){
     }
 
 
-    /**
-     * Download data.
+    /*
+     * download scribbles to user's Download directory
      */
     function downloadData()
     {
@@ -410,8 +722,8 @@ var RevealChalkboard = (function(){
     }
 
 
-    /**
-     * Returns data object for the slide with the given indices.
+    /*
+     * get data object for given slide and given canvas
      */
     function getSlideData( indices, id )
     {
@@ -433,7 +745,9 @@ var RevealChalkboard = (function(){
     }
 
 
-    // do we have slide data?
+    /*
+     * return whether there are scribbles on given slide?
+     */
     function hasSlideData( indices, id )
     {
         if ( id == undefined ) id = mode;
@@ -452,21 +766,10 @@ var RevealChalkboard = (function(){
 
 
 
-    /*****************************************************************
-     ** Intercept page leave when data is not saved
-     ******************************************************************/
-    var needSave = false;
-    window.onbeforeunload = function(e)
-    {
-        if (needSave) return "blabla";
-    }
-
-
 
     /*****************************************************************
-     ** Print
+     * Generate PDF
      ******************************************************************/
-    var printMode = ( /print-pdf/gi ).test( window.location.search );
 
     function createPrintout( )
     {
@@ -577,9 +880,14 @@ var RevealChalkboard = (function(){
 
 
     /*****************************************************************
-     ** Drawings
+     * Low-level drawing routines
+     * Called by event playback
+     * Called by stroke methods called from pointer/mouse callbacks
      ******************************************************************/
 
+    /*
+     * draw line between two points
+     */
     function draw(context, fromX, fromY, toX, toY)
     {
         context.beginPath();
@@ -588,6 +896,10 @@ var RevealChalkboard = (function(){
         context.stroke();
     }
 
+
+    /*
+     * erase at/around given point
+     */
     function erase(context,x,y)
     {
         context.save();
@@ -599,60 +911,8 @@ var RevealChalkboard = (function(){
     }
 
 
-
-    /**
-     * Opens an overlay for the chalkboard.
-     */
-    function showChalkboard()
-    {
-        xLast        = null;
-        yLast        = null;
-        activeStroke = null;
-        mode         = 1;
-        boardMode    = true;
-
-        drawingCanvas[1].container.style.visibility = "visible";
-        drawingCanvas[1].container.style.pointerEvents = "auto";
-    }
-
-
-    /**
-     * Closes open chalkboard.
-     */
-    function closeChalkboard()
-    {
-        xLast        = null;
-        yLast        = null;
-        activeStroke = null;
-        mode         = 0;
-        boardMode    = false;
-
-        drawingCanvas[1].container.style.visibility = "hidden";
-        drawingCanvas[1].container.style.pointerEvents = "none";
-    }
-
-
     /*
-     * Toggle chalkboard visibility
-     */
-    function toggleChalkboard()
-    {
-        if ( boardMode )
-        {
-            closeChalkboard();
-        }
-        else
-        {
-            showChalkboard();
-        }
-        updateGUI();
-    };
-
-
-
-
-    /**
-     * Clear current canvas.
+     * clear given canvas
      */
     function clearCanvas( id )
     {
@@ -660,10 +920,15 @@ var RevealChalkboard = (function(){
     }
 
 
+
     /*****************************************************************
-     ** record and play-back events
+     * Record and play-back events
+     * Call low-level drawing routines
      ******************************************************************/
 
+    /*
+     * Push current event to slide's event list
+     */
     function recordEvent( event )
     {
         var slideData = getSlideData();
@@ -672,6 +937,9 @@ var RevealChalkboard = (function(){
     }
 
 
+    /*
+     * Playback all events of the current slide for given canvas
+     */
     function playbackEvents( id )
     {
         clearCanvas( id );
@@ -689,7 +957,9 @@ var RevealChalkboard = (function(){
     };
 
 
-
+    /* 
+     * Playback one event (i.e. stroke)
+     */
     function playEvent( id, event )
     {
         switch ( event.type )
@@ -704,6 +974,9 @@ var RevealChalkboard = (function(){
     };
 
 
+    /*
+     * Draw the curve stored in event to canvas ID
+     */
     function drawCurve( id, event )
     {
         var ctx = drawingCanvas[id].context;
@@ -737,6 +1010,9 @@ var RevealChalkboard = (function(){
     };
 
 
+    /*
+     * Erase the "curve" stored in event to canvas ID
+     */
     function eraseCurve( id, event )
     {
         var ctx = drawingCanvas[id].context;
@@ -757,80 +1033,79 @@ var RevealChalkboard = (function(){
     };
 
 
+
     /*****************************************************************
-     ** User interface
+     * GUI methods to start, continue, and stop a stroke
+     * Are called from pointer/mouse callback
+     * Call low-level drawing routines
      ******************************************************************/
 
+    /*
+     * start a stroke:
+     * compute mouse position from event data, remember it
+     * setup new stroke event (draw or erase)
+     * call low-level draw/erase
+     * update mouse cursor
+     */
     function startStroke(evt)
     {
-        evt.preventDefault();
-        evt.stopPropagation();
-
-        // cancel auto-hide
-        clearTimeout( cursorInactiveTimeout );
+        // cancel timeouts
+        clearTimeout( hideCursorTimeout );
+        clearTimeout( selectCursorTimeout );
 
         // update scale, zoom, and bounding rectangle
         slideZoom  = slides.style.zoom || 1;
 
         // convert pointer/touch position to local coordiantes
-        var mouseX = evt.offsetX;
-        var mouseY = evt.offsetY;
-
-        // compensate for CSS-zoom
-        mouseX = mouseX / slideZoom;
-        mouseY = mouseY / slideZoom;
+        var mouseX = evt.offsetX / slideZoom;
+        var mouseY = evt.offsetY / slideZoom;
 
         if (mouseY < drawingCanvas[mode].canvas.height && mouseX < drawingCanvas[mode].canvas.width)
         {
             var ctx = drawingCanvas[mode].context;
 
-            // remember position
-            xLast  = mouseX;
-            yLast  = mouseY;
-
             // erase mode
             if ((tool==ToolType.ERASER) || (evt.buttons > 1))
             {
+                showCursor(eraserCursor);
                 activeStroke = { type:  "erase", 
                                  coords: [mouseX, mouseY] };
-                slides.style.cursor = eraserCursor;
                 erase(ctx,mouseX,mouseY);
             }
             // draw mode
             else
             {
-                // set cursor
-                slides.style.cursor = penCursor;
-                // set color
+                showCursor(penCursor);
                 ctx.strokeStyle = penColor;
-                // setup event
                 activeStroke = { type:  "draw", 
                                  color: penColor, 
                                  coords: [mouseX, mouseY] };
-                // draw start point
                 draw(ctx, mouseX, mouseY, mouseX, mouseY);
             }
+
+            // remember position
+            xLast  = mouseX;
+            yLast  = mouseY;
         }
+
+        // don't propagate event any further
+        killEvent(evt);
     };
 
 
-
+    /*
+     * continue the active stroke:
+     * compute mouse position from event data, remember it
+     * append data to active stroke
+     * call low-level draw/erase
+     */
     function continueStroke( evt )
     {
         if (activeStroke)
         {
-            evt.preventDefault();
-            evt.stopPropagation();
-
             // convert touch position to mouse position
-            //var mouseX = (evt.clientX - slideRect.left) / slideScale;
-            //var mouseY = (evt.clientY - slideRect.top ) / slideScale;
-            var mouseX = evt.offsetX;
-            var mouseY = evt.offsetY;
-
-            // compensate for CSS-zoom
-            mouseX = mouseX / slideZoom;
-            mouseY = mouseY / slideZoom;
+            var mouseX = evt.offsetX / slideZoom;
+            var mouseY = evt.offsetY / slideZoom;
 
             // only do something if mouse position changed and we are within bounds
             if ((mouseX!=xLast || mouseY!=yLast) &&
@@ -855,20 +1130,32 @@ var RevealChalkboard = (function(){
                 xLast = mouseX;
                 yLast = mouseY;
             }
+
+            // don't propagate event any further
+            killEvent(evt);
         }
     };
 
 
+    /*
+     * stop current stroke:
+     * stroke stroke to slide data
+     * adjust height of board
+     */
     function stopStroke(evt)
     {
         if (activeStroke)
         {
-            evt.preventDefault();
-            evt.stopPropagation();
+            // don't propagate event any further
+            killEvent(evt);
 
+            // save stroke to slide's event data
             recordEvent( activeStroke );
+
+            // inactive stroke
             activeStroke = null;
 
+            // when drawing on board, adjust its height and redraw
             if (mode==1) 
             {
                 adjustChalkboardHeight();
@@ -876,247 +1163,289 @@ var RevealChalkboard = (function(){
             }
         }
 
-        // reset cursor
-        showCursor();
+        // pen mode? switch back to laser after 3sec
+        if (tool==ToolType.PEN) 
+        {
+            // select pen, since we might have been erasing
+            selectCursor(penCursor);
+            // switch to laser in 2sec
+            triggerSelectCursor(laserCursor);
+        }
+        hideCursor();
     };
 
 
-    // setup callbacks
-    if (window.PointerEvent)
+
+    /*****************************************************************
+     * pointer and mouse callbacks
+     ******************************************************************/
+
+    function pointerdown(evt) 
     {
-        slides.addEventListener( 'pointerdown', function(evt) {
+        // no tool selected -> return
+        if (!tool) return;
 
-            if (DEBUG)
-            {
-                console.log("pointerdown: " + evt.pointerType + ", " + evt.button + ", " + evt.buttons);
-            }
-
-            // no tool selected -> return
-            if (!tool) return;
-
-            switch(evt.pointerType)
-            {
-                case "pen":
-                case "mouse":
-                    switch(tool)
-                    {
-                        case ToolType.PEN:
-                        case ToolType.ERASER:
-                            startStroke(evt);
-                            break;
+        switch(evt.pointerType)
+        {
+            case "pen":
+            case "mouse":
+                switch(tool)
+                {
+                    case ToolType.PEN:
+                    case ToolType.ERASER:
+                        startStroke(evt);
+                        break;
 
                         //case ToolType.LASER:
-                            //slides.style.cursor = laserCursor;
-                            //break;
-                    }
-                    break;
+                        //slides.style.cursor = laserCursor;
+                        //break;
+                }
+                break;
 
-                case "touch":
-                    showCursor();
-                    break;
-            }
-        }, true );
-
-
-        slides.addEventListener( 'pointermove', function(evt) {
-
-            if (DEBUG)
-            {
-                console.log("pointermove: " + evt.pointerType + ", " + evt.button + ", " + evt.buttons + ", " + evt.pressure);
-            }
-
-            // no tool selected -> return
-		    if (!tool) return;
-
-            // no mouse button pressed -> show laser, active auto-hide, return
-            if (!evt.buttons)
-            {
-                showCursor();
-                return;
-            }
-
-            // mouse button pressed
-            switch(evt.pointerType)
-            {
-                case "pen":
-                case "mouse":
-                    switch(tool)
-                    {
-                        case ToolType.PEN:
-                        case ToolType.ERASER:
-                            // try to exploit coalesced events
-                            events = [evt];
-                            if (evt.getCoalescedEvents) 
-                            {
-                                events = evt.getCoalescedEvents() || events;
-                                if (DEBUG) console.log( events.length + " coalesced move events");
-                            }
-                            for (let e of events) 
-                                if (e.buttons > 0) 
-                                    continueStroke(e);
-                            break;
-
-                        //case ToolType.LASER:
-                            //break;
-                    }
-                    break;
-
-                case "touch":
-                    showCursor();
-                    evt.preventDefault();
-                    evt.stopPropagation();
-                    break;
-            }
-        }, {passive: false});
-
-
-        slides.addEventListener( 'pointerup', function(evt) {
-            
-            if (DEBUG)
-            {
-                console.log("pointerup: " + evt.pointerType + ", " + evt.button + ", " + evt.buttons);
-            }
-
-            // no tool selected -> return
-		    if (!tool) return;
-
-            switch(evt.pointerType)
-            {
-                case "pen":
-                case "mouse":
-                    switch(tool)
-                    {
-                        case ToolType.PEN:
-                        case ToolType.ERASER:
-                            stopStroke(evt);
-                            break;
-
-                        //case ToolType.LASER:
-                            //slides.style.cursor = 'none';
-                            //break;
-                    }
-                    break;
-
-                case "touch":
-                    showCursor();
-                    break;
-            }
-        });
+            case "touch":
+                showCursor(laserCursor);
+                triggerHideCursor();
+                break;
+        }
     }
 
-    // no pointer events
+
+    function pointermove(evt) 
+    {
+        // no tool selected -> return
+        if (!tool) return;
+
+        // no mouse button pressed -> show laser, active auto-hide, return
+        if (!evt.buttons)
+        {
+            showCursor();
+            triggerHideCursor();
+            return;
+        }
+
+        // mouse button pressed
+        switch(evt.pointerType)
+        {
+            case "pen":
+            case "mouse":
+                switch(tool)
+                {
+                    case ToolType.PEN:
+                    case ToolType.ERASER:
+                        // try to exploit coalesced events
+                        var events = [evt];
+                        if (evt.getCoalescedEvents) 
+                        {
+                            events = evt.getCoalescedEvents() || events;
+                            if (DEBUG) console.log( events.length + " coalesced move events");
+                        }
+                        for (let e of events) 
+                            if (e.buttons > 0) 
+                                continueStroke(e);
+                        break;
+
+                        //case ToolType.LASER:
+                        //break;
+                }
+                break;
+
+            case "touch":
+                showCursor(laserCursor);
+                triggerHideCursor();
+                break;
+        }
+    }
+
+
+    function pointerup(evt) 
+    {
+        // no tool selected -> return
+        if (!tool) return;
+
+        switch(evt.pointerType)
+        {
+            case "pen":
+            case "mouse":
+                switch(tool)
+                {
+                    case ToolType.PEN:
+                    case ToolType.ERASER:
+                        stopStroke(evt);
+                        break;
+
+                        //case ToolType.LASER:
+                        //slides.style.cursor = 'none';
+                        //break;
+                }
+                break;
+
+            case "touch":
+                triggerHideCursor();
+                break;
+        }
+    }
+
+
+    function mousedown(evt) 
+    {
+        switch(tool)
+        {
+            case ToolType.PEN:
+            case ToolType.ERASER:
+                startStroke(evt);
+                break;
+
+                //case ToolType.LASER:
+                //slides.style.cursor = laserCursor;
+                //break;
+        }
+    }
+
+
+    function mousemove(evt) 
+    {
+        if (tool && !evt.buttons) { showCursor(); return; }
+        switch(tool)
+        {
+            case ToolType.PEN:
+            case ToolType.ERASER:
+                continueStroke(evt);
+                break;
+
+                //case ToolType.LASER:
+                //break;
+        }
+    }
+
+
+    function mouseup(evt)
+    {
+        switch(tool)
+        {
+            case ToolType.PEN:
+            case ToolType.ERASER:
+                stopStroke(evt);
+                break;
+
+                //case ToolType.LASER:
+                //slides.style.cursor = 'none';
+                //break;
+        }
+    }
+
+
+    function touchstart(evt) 
+    {
+        if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
+        {
+            // iPad pencil -> draw
+            for (let t of evt.targetTouches) 
+            {
+                if (t.touchType == "stylus")
+                {
+                    slideScale  = Reveal.getScale();
+                    slideRect   = slides.getBoundingClientRect();
+                    slideScroll = drawingCanvas[mode].container.scrollTop;
+                    evt.offsetX = (t.clientX - slideRect.left) / slideScale;
+                    evt.offsetY = (t.clientY - slideRect.top ) / slideScale + slideScroll;
+                    startStroke(evt);
+                    return;
+                }
+            }
+        }
+
+        // finger touch -> laser
+        if (tool) showCursor(laserCursor);
+    }
+
+
+    function touchmove(evt) 
+    {
+        if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
+        {
+            // iPad pencil -> draw
+            for (let t of evt.changedTouches) 
+            {
+                if (t.touchType == "stylus")
+                {
+                    evt.offsetX = (t.clientX - slideRect.left) / slideScale;
+                    evt.offsetY = (t.clientY - slideRect.top) / slideScale + slideScroll;
+                    continueStroke(evt);
+                    return;
+                }
+            }
+        }
+
+        // finger touch -> laser
+        if (tool) showCursor();
+    }
+
+
+    function touchend(evt) 
+    {
+        if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
+        {
+            // iPad pencil -> draw
+            for (let t of evt.changedTouches) 
+            {
+                if (t.touchType == "stylus")
+                {
+                    stopStroke(evt);
+                    return;
+                }
+            }
+        }
+    }
+
+
+    /*
+     * what to do when the slide changes 
+     */
+    function slideChanged(evt)
+    {
+        if ( !printMode ) {
+            slideIndices = Reveal.getIndices();
+            closeChalkboard();
+            playbackEvents( 0 );
+        }
+    }
+
+
+
+
+    /*****************************************************************
+     * Setup event listeners
+     ******************************************************************/
+
+    // setup pointer events
+    if (window.PointerEvent)
+    {
+        container.addEventListener( 'pointerdown', pointerdown, true );
+        container.addEventListener( 'pointermove', pointermove, {passive: false} );
+        container.addEventListener( 'pointerup',   pointerup );
+    }
+    // setup mouse and touch events
     else
     {
-        slides.addEventListener( 'mousedown', function(evt) {
-            switch(tool)
-            {
-                case ToolType.PEN:
-                case ToolType.ERASER:
-                    startStroke(evt);
-                    break;
-
-                //case ToolType.LASER:
-                    //slides.style.cursor = laserCursor;
-                    //break;
-            }
-        });
+        container.addEventListener( 'mousedown',  mousedown, true );
+        container.addEventListener( 'mousemove',  mousemove, {passive: false} );
+        container.addEventListener( 'mouseup',    mouseup );
+        container.addEventListener( 'touchstart', touchstart, true );
+        container.addEventListener( 'touchmove',  touchmove, {passive: false} );
+        container.addEventListener( 'touchend',   touchend );
+    }
 
 
-        slides.addEventListener( 'mousemove', function(evt) {
-            if (tool && !evt.buttons) { showCursor(); return; }
-            switch(tool)
-            {
-                case ToolType.PEN:
-                case ToolType.ERASER:
-                    continueStroke(evt);
-                    break;
-
-                //case ToolType.LASER:
-                    //break;
-            }
-        });
+    // Intercept page leave when data is not saved
+    window.onbeforeunload = function(e)
+    {
+        if (needSave) return "blabla";
+    }
 
 
-        slides.addEventListener( 'mouseup', function(evt) {
-            switch(tool)
-            {
-                case ToolType.PEN:
-                case ToolType.ERASER:
-                    stopStroke(evt);
-                    break;
-
-                //case ToolType.LASER:
-                    //slides.style.cursor = 'none';
-                    //break;
-            }
-        });
-
-
-        slides.addEventListener( 'touchstart', function(evt) {
-            if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
-            {
-                // iPad pencil -> draw
-                for (let t of evt.targetTouches) 
-                {
-                    if (t.touchType == "stylus")
-                    {
-                        slideScale  = Reveal.getScale();
-                        slideRect   = slides.getBoundingClientRect();
-                        slideScroll = drawingCanvas[mode].container.scrollTop;
-                        evt.offsetX = (t.clientX - slideRect.left) / slideScale;
-                        evt.offsetY = (t.clientY - slideRect.top ) / slideScale + slideScroll;
-                        startStroke(evt);
-                        return;
-                    }
-                }
-            }
-
-            // finger touch -> laser
-            if (tool) showCursor();
-        }, true );
-
-
-        slides.addEventListener( 'touchmove', function(evt) {
-            if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
-            {
-                // iPad pencil -> draw
-                for (let t of evt.changedTouches) 
-                {
-                    if (t.touchType == "stylus")
-                    {
-                        evt.offsetX = (t.clientX - slideRect.left) / slideScale;
-                        evt.offsetY = (t.clientY - slideRect.top) / slideScale + slideScroll;
-                        continueStroke(evt);
-                        return;
-                    }
-                }
-            }
-
-            // finger touch -> laser
-            if (tool) showCursor();
-        }, { passive: false });
-
-
-
-        slides.addEventListener( 'touchend', function(evt) {
-            if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
-            {
-                // iPad pencil -> draw
-                for (let t of evt.changedTouches) 
-                {
-                    if (t.touchType == "stylus")
-                    {
-                        stopStroke(evt);
-                        return;
-                    }
-                }
-            }
-        });
-
-    } // no pointer events
-
-
-    window.addEventListener( "contextmenu", function(evt) {
+    // when drawing, stop ANY context menu from being opened
+    window.addEventListener( "contextmenu", function(evt) 
+    {
         if (tool)
         {
             evt.preventDefault();
@@ -1126,9 +1455,10 @@ var RevealChalkboard = (function(){
     }, true );
 
 
-    window.addEventListener( "click", function(evt) {
-        // if in chalkboard mode, prevent accidential mouse clicks (e.g. on menu icon)
-        // only allow clicks for the four chalkboard's buttons
+    // when drawing, stop ANY click (e.g. menu icon)
+    // only allow clicks for our (.chalkboard) buttons
+    window.addEventListener( "click", function(evt) 
+    {
         if (tool && !evt.target.classList.contains("chalkboard"))
         {
             evt.preventDefault();
@@ -1138,233 +1468,26 @@ var RevealChalkboard = (function(){
     }, true );
 
 
-    window.addEventListener( "resize", function() {
-        playbackEvents( 0 );
-        playbackEvents( 1 );
-    } );
+
+    // whenever slide changes, update slideIndices and redraw
+    Reveal.addEventListener( 'ready',          slideChanged );
+    Reveal.addEventListener( 'slidechanged',   slideChanged );
+    Reveal.addEventListener( 'fragmentshown',  slideChanged );
+    Reveal.addEventListener( 'fragmenthidden', slideChanged );
 
 
-
-    Reveal.addEventListener( 'ready', function() {
-        if ( !printMode ) 
-        {
-            slideIndices = Reveal.getIndices();
-            adjustChalkboardHeight();
-            playbackEvents( 0 );
-            playbackEvents( 1 );
-        }
-    });
-
-
-    Reveal.addEventListener( 'slidechanged', function( evt ) {
-        if ( !printMode ) {
-            slideIndices = Reveal.getIndices();
-            closeChalkboard();
-            adjustChalkboardHeight();
-            playbackEvents( 0 );
-            playbackEvents( 1 );
-        }
-    });
-
-
-    Reveal.addEventListener( 'fragmentshown', function( evt ) {
-        if ( !printMode ) {
-            slideIndices = Reveal.getIndices();
-            closeChalkboard();
-            adjustChalkboardHeight();
-            playbackEvents( 0 );
-            playbackEvents( 1 );
-        }
-    });
-
-
-    Reveal.addEventListener( 'fragmenthidden', function( evt ) {
-        if ( !printMode ) {
-            slideIndices = Reveal.getIndices();
-            closeChalkboard();
-            adjustChalkboardHeight();
-            playbackEvents( 0 );
-            playbackEvents( 1 );
-        }
-    });
-
-
-
-    // select active tool (pen, eraser, laser pointer)
-    function selectTool(newTool)
-    {
-        tool = (tool==newTool ? ToolType.NONE : newTool);
-        updateGUI();
-    }
-
-
-    // set laser and pen cursor
-    function updateCursor()
-    {
-        // convert penColor to rgb
-        var elem = document.body.appendChild(document.createElement('fictum'));
-        elem.style.color = penColor;
-        var color = getComputedStyle(elem).color;
-        var rgb = color.substring(color.indexOf('(')+1, color.lastIndexOf(')')).split(/,\s*/);
-        document.body.removeChild(elem);
-
-        // setup pen color with alpha=255 and alpha=0
-        var col1 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",255)";
-        var col2 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",128)";
-        var col3 = "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ",0)";
-
-        var ctx  = cursorCanvas.getContext("2d");
-
-        // render pen cursor
-        var grdPen   = ctx.createRadialGradient(10, 10, 1, 10, 10, 3);
-        grdPen.addColorStop(0, col1);
-        grdPen.addColorStop(1, col3);
-        ctx.clearRect(0, 0, 20, 20); 
-        ctx.fillStyle = grdPen;
-        ctx.fillRect(0, 0, 20, 20);
-        penCursor = "url(" + cursorCanvas.toDataURL() + ") 10 10, auto";
-
-        // render laser cursor
-        var grdLaser = ctx.createRadialGradient(10, 10, 1, 10, 10, 10);
-        grdLaser.addColorStop(0, col2);
-        grdLaser.addColorStop(1, col3);
-        ctx.clearRect(0, 0, 20, 20); 
-        ctx.fillStyle = grdLaser;
-        ctx.fillRect(0, 0, 20, 20);
-        laserCursor = "url(" + cursorCanvas.toDataURL() + ") 10 10, auto";
-
-        // reset cursor
-        slides.style.cursor = tool ? 'none' : '';
-    }
-
-
-    // check whether slide has blackboard scribbles, and then highlight icon
-    function updateGUI()
-    {
-        if (printMode) return;
-
-
-        // reset icon states
-        buttonPen.style.color    = "lightgrey";
-        //buttonLaser.style.color  = "lightgrey";
-        buttonEraser.style.color = "lightgrey";
-        buttonBoard.style.color  = "lightgrey";
-
-
-        // set board button
-        if (boardMode)
-            buttonBoard.style.color  = "#2a9ddf";
-        else if (hasSlideData(Reveal.getIndices(), 1))
-            buttonBoard.style.color = "red";
-
-
-        // highlight active tool icon
-        switch (tool)
-        {
-            case ToolType.PEN:
-                buttonPen.style.color = "#2a9ddf";
-                break;
-
-            case ToolType.ERASER:
-                buttonEraser.style.color = "#2a9ddf";
-                break;
-
-            //case ToolType.LASER:
-                //buttonLaser.style.color = "#2a9ddf";
-                //break;
-        }
-
-
-        // canvas setup
-        if (tool)
-        {
-            drawingCanvas[mode].canvas.style.border        = "1px solid " + penColor;
-            drawingCanvas[mode].canvas.style.pointerEvents = "auto";
-        }
-        else
-        {
-            drawingCanvas[mode].canvas.style.borderColor   = "transparent";
-            drawingCanvas[mode].canvas.style.pointerEvents = "none";
-        }
-
-
-        // update cursor
-        updateCursor();
-    }
-
-
-    // add callbacks for adjusting GUI
+    // update GUI (button) on slide change
+    Reveal.addEventListener( 'ready',          updateGUI );
     Reveal.addEventListener( 'slidechanged',   updateGUI );
     Reveal.addEventListener( 'fragmentshown',  updateGUI );
     Reveal.addEventListener( 'fragmenthidden', updateGUI );
 
 
-	function showCursor() 
-    {
-        switch (tool)
-        {
-            case ToolType.PEN:
-            case ToolType.LASER:
-                slides.style.cursor = laserCursor;
-                break;
 
-            case ToolType.ERASER:
-                slides.style.cursor = eraserCursor;
-                break;
-        }
-        clearTimeout( cursorInactiveTimeout );
-        cursorInactiveTimeout = setTimeout( hideCursor, hideCursorTime );
-	}
+    /*****************************************************************
+     * Setup key bindings
+     ******************************************************************/
 
-	function hideCursor() 
-    {
-        slides.style.cursor = 'none';
-	}
-
-
-    function clearSlide()
-    {
-        var ok = confirm("Delete notes and board on this slide?");
-        if ( ok )
-        {
-            activeStroke = null;
-            closeChalkboard();
-
-            clearCanvas( 0 );
-            clearCanvas( 1 );
-
-            mode = 1;
-            var slideData = getSlideData();
-            slideData.events = [];
-
-            mode = 0;
-            var slideData = getSlideData();
-            slideData.events = [];
-        }
-    };
-
-
-    function pdfExport()
-    {
-        if (confirm("Leave/reload presentation to export PDF?"))
-        {
-            window.open("?print-pdf","_self")
-        }
-    }
-
-
-    function drawUndo()
-    {
-        if (hasSlideData( slideIndices, mode ))
-        {
-            var slideData = getSlideData( slideIndices, mode );
-            slideData.events.pop();
-            playbackEvents( mode );
-        }
-    }
-
-
-    // setup keyboard shortcuts
     Reveal.addKeyBinding( { keyCode: 46, key: 'Delete', 
         description: 'Reset Chalkboard' }, 
         clearSlide );
@@ -1397,10 +1520,6 @@ var RevealChalkboard = (function(){
         description: 'Trigger Print/PDF-Export' }, 
         pdfExport );
 
-    this.drawUndo          = drawUndo;
-    this.toggleChalkboard  = toggleChalkboard;
-    this.clearSlide        = clearSlide;
-    this.download          = downloadData;
 
 
 	return {
@@ -1415,12 +1534,12 @@ var RevealChalkboard = (function(){
                 
                 if (printMode)
                 {
-                    // load scribbles, create chalkboard slides, resolve promise
+                    // load scribbles, create chalkboard slides, then resolve promise
                     loadData().then(createPrintout).then(resolve);
                 }
                 else
                 {
-                    // load scribbles, resolve promise
+                    // load scribbles, then resolve promise
                     loadData().then(resolve);
                 }
             });
@@ -1430,3 +1549,4 @@ var RevealChalkboard = (function(){
 })();
 
 Reveal.registerPlugin( 'chalkboard', RevealChalkboard );
+

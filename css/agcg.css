@@ -731,6 +731,16 @@ body {
     opacity: 0.7;
 }
 
+/* make chalkboard scrollbar visible in Safari */
+/*::-webkit-scrollbar {*/
+    /*-webkit-appearance: none;*/
+    /*width: 7px;*/
+    /*background-color: "white";*/
+/*}*/
+/*::-webkit-scrollbar-thumb {*/
+    /*border-radius: 4px;*/
+    /*background-color: rgba(0,0,0,.5);*/
+/*}*/
 
 /*********************************************
  * MARIO: Task lists
