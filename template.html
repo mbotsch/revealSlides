@@ -82,7 +82,9 @@ $endfor$
                 vector: ['\\begin{pmatrix} #1 \\end{pmatrix}', 1],
                 of: ['\\mkern{-2mu}\\left( #1 \\right\)', 1],
                 diff: ['\\frac{\\mathrm{d}{#1}}{\\mathrm{d}{#2}}', 2],
-                pdiff: ['\\frac{\\partial {#1}}{\\partial {#2}}', 2]
+                pdiff: ['\\frac{\\partial {#1}}{\\partial {#2}}', 2],
+                O: '\\mathcal{O}',
+                Oh: ['\\mathcal{O}\\left({#1}\\right)',1],
               }
           },
       });
