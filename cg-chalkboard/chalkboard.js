@@ -1209,10 +1209,6 @@ var RevealChalkboard = (function(){
                     case ToolType.ERASER:
                         startStroke(evt);
                         break;
-
-                        //case ToolType.LASER:
-                        //slides.style.cursor = laserCursor;
-                        //break;
                 }
                 break;
 
@@ -1302,48 +1298,54 @@ var RevealChalkboard = (function(){
 
     function mousedown(evt) 
     {
+        // no tool selected -> return
+        if (!tool) return;
+
         switch(tool)
         {
             case ToolType.PEN:
             case ToolType.ERASER:
                 startStroke(evt);
                 break;
-
-                //case ToolType.LASER:
-                //slides.style.cursor = laserCursor;
-                //break;
         }
     }
 
 
     function mousemove(evt) 
     {
-        if (tool && !evt.buttons) { showCursor(); return; }
+        // no tool selected -> return
+        if (!tool) return;
+
+        // no mouse button pressed -> show laser, active auto-hide, return
+        if (!evt.buttons)
+        {
+            showCursor();
+            triggerHideCursor();
+            return;
+        }
+
+        // mouse button pressed
         switch(tool)
         {
             case ToolType.PEN:
             case ToolType.ERASER:
                 continueStroke(evt);
                 break;
-
-                //case ToolType.LASER:
-                //break;
         }
     }
 
 
     function mouseup(evt)
     {
+        // no tool selected -> return
+        if (!tool) return;
+
         switch(tool)
         {
             case ToolType.PEN:
             case ToolType.ERASER:
                 stopStroke(evt);
                 break;
-
-                //case ToolType.LASER:
-                //slides.style.cursor = 'none';
-                //break;
         }
     }
 
