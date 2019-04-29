@@ -240,6 +240,9 @@ $body$
       { src: '$template$/cg-footer/footer.js' },
 	  { src: '$template$/cg-notes/notes.js', async: true },
       { src: '$template$/cg-zoom/zoom.js', async: true },
+$for(customRevealPlugin)$
+      { src: '$customRevealPlugin$' },
+$endfor$
       ]
 
 	  });
