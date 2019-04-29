@@ -13,17 +13,21 @@ FILTER   := $(REVEAL)/pandoc-filter/$(OS)
 
 ###  EXPLICIT RULES  ##########################################################
 
-.PHONY: html setup server
+.PHONY: html setup server clean allclean
 
 html: Makefile $(HTML)
 
-Makefile: $(REVEAL)/slide-build/Makefile
-	@cp -u $(REVEAL)/slide-build/Makefile .
-	@echo "Makefile was updated. Please start again."
-
-setup: Makefile
-	@cp -u $(REVEAL)/slide-build/* .
+setup: Makefile package.json gruntfile.js
 	@npm install
+
+Makefile: $(REVEAL)/slide-build/Makefile
+	@\cp $(REVEAL)/slide-build/Makefile .
+
+package.json: $(REVEAL)/slide-build/package.json
+	@\cp $(REVEAL)/slide-build/package.json .
+
+gruntfile.js: $(REVEAL)/slide-build/gruntfile.js
+	@\cp $(REVEAL)/slide-build/gruntfile.js .
 
 server: setup html
 	@npm start
