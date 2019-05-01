@@ -168,7 +168,7 @@ var RevealChalkboard = (function(){
     container.style.transition = "none";
     container.style.margin     = "0";
     container.style.padding    = "0";
-    container.style.border     = "1px solid transparent";
+    container.style.border     = "1px solid " + background;
     container.style.boxSizing  = "content-box";
     container.style.position   = "absolute";
     container.style.top        = "0px";
@@ -423,7 +423,7 @@ var RevealChalkboard = (function(){
         }
         else
         {
-            container.style.border = "1px solid transparent";
+            container.style.border = "1px solid " + background;
             drawingCanvas[mode].canvas.style.pointerEvents = "none";
         }
     }
@@ -464,20 +464,27 @@ var RevealChalkboard = (function(){
 
 
     /*
-     * adjust board height to max. scribbles plus half a page
+     * adjust board height to fit scribbles
      */
     function adjustChalkboardHeight() 
     { 
         // compute new page height
-        var pageHeight = Reveal.getConfig().height;
-        var height = Math.round(chalkboardHeight() + pageHeight/2);
-        if (height < pageHeight) height = pageHeight;
-        if (DEBUG) console.log("set slide height to " + height);
+        var pageHeight     = Reveal.getConfig().height;
+        var scribbleHeight = chalkboardHeight();
+        var height = pageHeight * Math.max(1, Math.ceil(scribbleHeight/pageHeight));
+        setChalkboardHeight(height);
+    }
 
+    /*
+     * set chalkboard height to specified value
+     */
+    function setChalkboardHeight(height)
+    {
         // set canvas properties
         var canvas = drawingCanvas[1].canvas;
         canvas.style.height = height + "px";
         canvas.height = height * canvasScale;
+        if (DEBUG) console.log("set slide height to " + height);
 
         // adjust canvas width to css width, which might change due to scrollbar
         var width = canvas.clientWidth;
@@ -493,6 +500,17 @@ var RevealChalkboard = (function(){
         // remember to restore previous drawings with playbackEvents(1)!
     }
 
+    /*
+     * add one page to chalkboard (only when drawing on back-board!)
+     */
+    function addChalkboardPage()
+    {
+        if (!tool || mode!=1) return;
+        var pageHeight  = Reveal.getConfig().height;
+        var boardHeight = drawingCanvas[1].canvas.clientHeight;
+        setChalkboardHeight( boardHeight + pageHeight );
+        playbackEvents(1);
+    }
 
 
     /*****************************************************************
@@ -1168,13 +1186,6 @@ var RevealChalkboard = (function(){
 
             // inactive stroke
             activeStroke = null;
-
-            // when drawing on board, adjust its height and redraw
-            if (mode==1) 
-            {
-                adjustChalkboardHeight();
-                playbackEvents(1);
-            }
         }
 
         // pen mode? switch back to laser after 3sec
@@ -1290,7 +1301,6 @@ var RevealChalkboard = (function(){
                 break;
 
             case "touch":
-                triggerHideCursor();
                 break;
         }
     }
@@ -1352,6 +1362,9 @@ var RevealChalkboard = (function(){
 
     function touchstart(evt) 
     {
+        // no tool selected -> return
+        if (!tool) return;
+
         if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
         {
             // iPad pencil -> draw
@@ -1371,12 +1384,16 @@ var RevealChalkboard = (function(){
         }
 
         // finger touch -> laser
-        if (tool) showCursor(laserCursor);
+        showCursor(laserCursor);
+        triggerHideCursor();
     }
 
 
     function touchmove(evt) 
     {
+        // no tool selected -> return
+        if (!tool) return;
+
         if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
         {
             // iPad pencil -> draw
@@ -1393,12 +1410,16 @@ var RevealChalkboard = (function(){
         }
 
         // finger touch -> laser
-        if (tool) showCursor();
+        showCursor();
+        triggerHideCursor();
     }
 
 
     function touchend(evt) 
     {
+        // no tool selected -> return
+        if (!tool) return;
+
         if ((tool==ToolType.PEN) || (tool==ToolType.ERASER))
         {
             // iPad pencil -> draw
@@ -1491,6 +1512,8 @@ var RevealChalkboard = (function(){
     Reveal.addEventListener( 'fragmentshown',  slideChanged );
     Reveal.addEventListener( 'fragmenthidden', slideChanged );
 
+    // trigger browser's print button when PDF has been created
+    Reveal.addEventListener( 'pdf-ready', function(){ setTimeout(window.print, 1000); } );
 
     // update GUI (button) on slide change
     Reveal.addEventListener( 'ready',          updateGUI );
@@ -1520,10 +1543,6 @@ var RevealChalkboard = (function(){
         description: 'Toggle Eraser' },
         function(){ selectTool(ToolType.ERASER); });
 
-    Reveal.addKeyBinding( { keyCode: 76, key: 'L', 
-        description: 'Toggle Laser Pointer' }, 
-        function(){ selectTool(ToolType.LASER); });
-
     Reveal.addKeyBinding( { keyCode: 84, key: 'T', 
         description: 'Toggle Chalkboard' }, 
         toggleChalkboard );
@@ -1535,6 +1554,10 @@ var RevealChalkboard = (function(){
     Reveal.addKeyBinding( { keyCode: 80, key: 'P', 
         description: 'Trigger Print/PDF-Export' }, 
         pdfExport );
+
+    Reveal.addKeyBinding( { keyCode: 13, key: 'Enter', 
+        description: 'Add Page to Chalkboard' }, 
+        addChalkboardPage );
 
 
 
