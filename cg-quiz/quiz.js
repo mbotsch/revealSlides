@@ -57,8 +57,19 @@ var RevealQuiz = (function(){
     chart_div.style.borderRadius    = "10px";
     chart_div.style.boxShadow       = "3px 5px 5px grey";
 	chart_div.style.backgroundColor = 'rgba(255,255,255,1.0)';
+	chart_div.style.transition      = 'none';
+	chart_div.style.transformOrigin = 'bottom right';
     document.querySelector(".reveal").appendChild( chart_div );
 
+    // canvas for the actual chart
+    var chart = document.createElement( 'canvas' );
+    chart.width        = "400";
+    chart.height       = "300";
+    chart.style.top    = "0px";
+    chart.style.left   = "0px";
+    chart.style.width  = "400px";
+    chart.style.height = "300px";
+    chart_div.appendChild( chart );
 
     // generate label for #votes
     var votes_div = document.createElement( 'div' );
@@ -84,6 +95,7 @@ var RevealQuiz = (function(){
     votes_div.style.boxShadow       = "3px 5px 5px grey";
 	votes_div.style.backgroundColor = 'rgba(255,255,255,1.0)';
     votes_div.style.cursor          = "help";
+	votes_div.style.transformOrigin = 'bottom right';
     document.querySelector(".reveal").appendChild( votes_div );
 
 
@@ -120,13 +132,6 @@ var RevealQuiz = (function(){
     // is this window a presenter preview? see reveal.js:isSpeakerNotes()
     // if it is, then shut up and do not play audio jingles
     var shutUp = !!Reveal.isSpeakerNotes();
-
-
-    // load google charts & create chart object
-    if (typeof(google) != 'undefined')
-    {
-        google.charts.load("current", {packages:['corechart']});
-    }
 
 
     // what to do on slide change
@@ -312,54 +317,51 @@ var RevealQuiz = (function(){
         jingleAnswer.play();
 
         // resize and show
-        var s = Reveal.getScale();
-        var w = 400*s;
-        var h = 300*s;
-        chart_div.style.width  = w + "px";
-        chart_div.style.height = h + "px";
         chart_div.style.visibility = 'visible';
 
-        //console.log(result);
-        //result = [10, 26, 5, 7];
+        // DEBUG 
+        result = [10, 26, 5, 7];
 
-        // we need google charts
-        if (typeof(google) != 'undefined')
+        // how many answers?
+        var n = 0;
+        for (var i = 0; i < result.length; i++)
         {
-
-            // how many answers?
-            var n = 0;
-		    for (var i = 0; i < result.length; i++)
-            {
-                n += result[i];
-            }
-
-            // convert answers to percentages
-		    for (var i = 0; i < result.length; i++)
-            {
-                result[i] /= n;
-            }
-
-		    var data = new google.visualization.DataTable();
-		    data.addColumn('string', 'Answer');
-		    data.addColumn('number', 'Votes');
-		    for (var i = 0; i < result.length; i++)
-            {
-			    data.addRow([ String.fromCharCode(i + 65), result[i] ]);
-		    }
-
-            var options = {
-                'width':w,
-                'height':h,
-                legend: { position: "none" },
-                bar: {groupWidth: "90%"},
-                colors: [ '#2a9ddf' ],
-                vAxis: { format: 'percent', viewWindow: { max:0.0, min:1.0 } },
-                animation: { startup: true, duration: 2000, easing: 'out' },
-            };
-
-            var chart = new google.visualization.ColumnChart(chart_div);
-            chart.draw(data, options);
+            n += result[i];
         }
+
+        // convert answers to percentages
+        for (var i = 0; i < result.length; i++)
+        {
+            result[i] /= n;
+        }
+
+        // get labels as subset of this array
+        var labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].slice(0, result.length);
+
+        var ctx = chart.getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: result,
+                    backgroundColor: '#2a9ddf'
+                }]
+            },
+            options: {
+                animation: { duration: 3000 },
+                legend: { display: false },
+                title: { display: false },
+                tooltips: { enabled : false },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
     }
 
 
@@ -410,6 +412,13 @@ var RevealQuiz = (function(){
     }
 
 
+    function resize()
+    {
+        var s = Reveal.getScale();
+        chart_div.style.transform  = 'scale('+ s +')';
+        votes_div.style.transform  = 'scale('+ s +')';
+    }
+
 
 	return {
 		init: function() { 
@@ -421,6 +430,7 @@ var RevealQuiz = (function(){
 
                 // add event listener
                 Reveal.addEventListener( 'slidechanged', slideChanged );
+                Reveal.addEventListener( 'resize', resize );
 
                 resolve();
             });
