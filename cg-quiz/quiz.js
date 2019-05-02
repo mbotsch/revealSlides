@@ -42,7 +42,7 @@ var RevealQuiz = (function(){
 	chart_div.classList.add( 'visible' );
 	chart_div.setAttribute( 'data-prevent-swipe', '' );
     chart_div.style.visibility      = 'hidden';
-	chart_div.style.zIndex          = "32";
+	chart_div.style.zIndex          = "34";
 	chart_div.style.position        = "absolute";
     chart_div.style.left            = "auto";
     chart_div.style.top             = "auto";
@@ -66,7 +66,7 @@ var RevealQuiz = (function(){
 	votes_div.classList.add( 'visible' );
 	votes_div.setAttribute( 'data-prevent-swipe', '' );
     votes_div.style.visibility      = 'hidden';
-	votes_div.style.zIndex          = "31";
+	votes_div.style.zIndex          = "33";
 	votes_div.style.position        = "absolute";
     votes_div.style.left            = "auto";
     votes_div.style.top             = "auto";
@@ -200,9 +200,11 @@ var RevealQuiz = (function(){
     // start new ballot
     function startBallot()
     {
-        var answers = Reveal.getCurrentSlide().getElementsByClassName('answer');
+        var answersOld = Reveal.getCurrentSlide().getElementsByClassName('answer');
+        var answersNew = Reveal.getCurrentSlide().querySelectorAll('.reveal .quiz ul li');
+        var numAnswers = answersOld.length + answersNew.length;
         var xhr = new XMLHttpRequest();
-        xhr.open('post', server + '/init/' + answers.length, false);
+        xhr.open('post', server + '/init/' + numAnswers, false);
         xhr.withCredentials = true;
         xhr.send(null);
 
