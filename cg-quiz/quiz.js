@@ -320,7 +320,7 @@ var RevealQuiz = (function(){
         chart_div.style.visibility = 'visible';
 
         // DEBUG 
-        result = [10, 26, 5, 7];
+        //result = [10, 26, 5, 7];
 
         // how many answers?
         var n = 0;
