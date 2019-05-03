@@ -447,10 +447,23 @@ var RevealChalkboard = (function(){
                 var event = slideData.events[i];
                 if (event.type == "draw")
                 {
-                    for (var j=1; j<event.coords.length; j+=2)
+                    // old syntax
+                    if (event.curve)
                     {
-                        var y = event.coords[j];
-                        if (y > height) height = y;
+                        for (var j=1; j<event.curve.length; j++)
+                        {
+                            var y = event.curve[j].y;
+                            if (y > height) height = y;
+                        }
+                    }
+                    // new syntax
+                    else if (event.coords)
+                    {
+                        for (var j=1; j<event.coords.length; j+=2)
+                        {
+                            var y = event.coords[j];
+                            if (y > height) height = y;
+                        }
                     }
                 }
             }
