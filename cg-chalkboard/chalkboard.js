@@ -14,7 +14,9 @@
 
 var RevealChalkboard = (function(){
 
-    var DEBUG = false;
+    var DEBUG  = false;
+    var BEZIER = true;
+
 
     /************************************************************************
      ** Tools
@@ -86,11 +88,7 @@ var RevealChalkboard = (function(){
     var tool = ToolType.NONE;
     var mode = 0; // 0: draw on slides, 1: draw on whiteboard
 
-    // mouse cordinates for drawing
-    var mouseX = 0;
-    var mouseY = 0;
-    var xLast = null;
-    var yLast = null;
+    // current stroke recording event data (type, coordinates, color)
     var activeStroke = null;
 
     // variable used to block leaving HTML page
@@ -217,6 +215,7 @@ var RevealChalkboard = (function(){
         var ctx = canvas.getContext("2d");
         ctx.scale(canvasScale, canvasScale);
         ctx.lineCap   = 'round';
+        ctx.lineJoint = 'round';
         ctx.lineWidth = 2;
 
         // differences between the two canvases
@@ -508,6 +507,7 @@ var RevealChalkboard = (function(){
         var ctx = drawingCanvas[1].context;
         ctx.scale(canvasScale, canvasScale);
         ctx.lineCap   = 'round';
+        ctx.lineJoin  = 'round';
         ctx.lineWidth = 2;
 
         // remember to restore previous drawings with playbackEvents(1)!
@@ -541,8 +541,8 @@ var RevealChalkboard = (function(){
             activeStroke = null;
             closeChalkboard();
 
-            clearCanvas( 0 );
-            clearCanvas( 1 );
+            clearCanvas( drawingCanvas[0].context );
+            clearCanvas( drawingCanvas[1].context );
 
             mode = 1;
             var slideData = getSlideData();
@@ -603,8 +603,6 @@ var RevealChalkboard = (function(){
      */
     function showChalkboard()
     {
-        xLast        = null;
-        yLast        = null;
         activeStroke = null;
         mode         = 1;
         boardMode    = true;
@@ -626,8 +624,6 @@ var RevealChalkboard = (function(){
      */
     function closeChalkboard()
     {
-        xLast        = null;
-        yLast        = null;
         activeStroke = null;
         mode         = 0;
         boardMode    = false;
@@ -853,53 +849,9 @@ var RevealChalkboard = (function(){
 
             // draw strokes to image
             for (var j = 0; j < slideData.events.length; j++)
-            {
-                switch ( slideData.events[j].type )
-                {
-                    case "draw":
-                        if (slideData.events[j].curve)
-                        {
-                            for (var k = 1; k < slideData.events[j].curve.length; k++)
-                                draw( imgCtx,
-                                      slideData.events[j].curve[k-1].x,
-                                      slideData.events[j].curve[k-1].y,
-                                      slideData.events[j].curve[k].x,
-                                      slideData.events[j].curve[k].y);
-                        }
-                        else if (slideData.events[j].coords)
-                        {
-                            imgCtx.strokeStyle = slideData.events[j].color;
-                            for (var k=0; k<slideData.events[j].coords.length-3; k+=2)
-                                draw( imgCtx,
-                                      slideData.events[j].coords[k  ],
-                                      slideData.events[j].coords[k+1],
-                                      slideData.events[j].coords[k+2],
-                                      slideData.events[j].coords[k+3]);
-                        }
-                        break;
+                playEvent(imgCtx, slideData.events[j]);
 
-                    case "erase":
-                        if (slideData.events[j].curve)
-                        {
-                            for (var k = 0; k < slideData.events[j].curve.length; k++)
-                                erase( imgCtx,
-                                       slideData.events[j].curve[k].x,
-                                       slideData.events[j].curve[k].y );
-                        }
-                        else if (slideData.events[j].coords)
-                        {
-                            for (var k=0; k<slideData.events[j].coords.length-1; k+=2)
-                                erase( imgCtx,
-                                       slideData.events[j].coords[k],
-                                       slideData.events[j].coords[k+1]);
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-
+            // create new slide element
             if ( slideData.events.length )
             {
                 var newSlide = document.createElement( 'section' );
@@ -931,18 +883,6 @@ var RevealChalkboard = (function(){
      ******************************************************************/
 
     /*
-     * draw line between two points
-     */
-    function draw(context, fromX, fromY, toX, toY)
-    {
-        context.beginPath();
-        context.moveTo(fromX, fromY);
-        context.lineTo(toX, toY);
-        context.stroke();
-    }
-
-
-    /*
      * erase at/around given point
      */
     function erase(context,x,y)
@@ -959,9 +899,9 @@ var RevealChalkboard = (function(){
     /*
      * clear given canvas
      */
-    function clearCanvas( id )
+    function clearCanvas( ctx )
     {
-        drawingCanvas[id].context.clearRect(0,0,drawingCanvas[id].width,drawingCanvas[id].height);
+        ctx.clearRect( 0, 0, ctx.canvas.width/canvasScale, ctx.canvas.height/canvasScale );
     }
 
 
@@ -985,9 +925,11 @@ var RevealChalkboard = (function(){
     /*
      * Playback all events of the current slide for given canvas
      */
-    function playbackEvents( id )
+    function playbackEvents( id, ctx )
     {
-        clearCanvas( id );
+        if (ctx == undefined) ctx = drawingCanvas[id].context;
+
+        clearCanvas( ctx );
 
         if (hasSlideData( slideIndices, id))
         {
@@ -995,7 +937,7 @@ var RevealChalkboard = (function(){
             var index = 0;
             while ( index < slideData.events.length )
             {
-                playEvent( id, slideData.events[index] );
+                playEvent( ctx, slideData.events[index] );
                 index++;
             }
         }
@@ -1005,15 +947,15 @@ var RevealChalkboard = (function(){
     /* 
      * Playback one event (i.e. stroke)
      */
-    function playEvent( id, event )
+    function playEvent( ctx, event )
     {
         switch ( event.type )
         {
             case "draw":
-                drawCurve( id, event);
+                drawCurve( ctx, event);
                 break;
             case "erase":
-                eraseCurve( id, event );
+                eraseCurve( ctx, event );
                 break;
         }
     };
@@ -1022,35 +964,59 @@ var RevealChalkboard = (function(){
     /*
      * Draw the curve stored in event to canvas ID
      */
-    function drawCurve( id, event )
+    function drawCurve( ctx, event )
     {
-        var ctx = drawingCanvas[id].context;
-
         // old syntax
         if (event.curve)
         {
             ctx.strokeStyle = color[mode];
 
-            // explicitly draw starting point (for one-point curves)
-            draw(ctx, event.curve[0].x, event.curve[0].y,
-                      event.curve[0].x, event.curve[0].y);
-
+            ctx.beginPath();
+            ctx.moveTo(event.curve[0].x, event.curve[0].y);
+            ctx.lineTo(event.curve[1].x, event.curve[1].y);
             for (var i=1; i < event.curve.length; i++)
-                draw(ctx, event.curve[i-1].x, event.curve[i-1].y,
-                          event.curve[i  ].x, event.curve[i  ].y);
+                ctx.lineTo(event.curve[i].x, event.curve[i].y);
+            ctx.stroke();
         }
         // new syntax
         else if (event.coords)
         {
             ctx.strokeStyle = event.color;
 
-            // explicitly draw starting point (for one-point curves)
-            draw(ctx, event.coords[0], event.coords[1],
-                      event.coords[0], event.coords[1]);
+            // draw curve as quadratic spline
+            if (BEZIER)
+            {
+                var coords = event.coords;
+                var cx, cy;
+                ctx.beginPath();
+                ctx.moveTo(coords[0], coords[1]);
+                if (coords.length > 4)
+                {
+                    cx = 0.5 * (coords[0] + coords[2]);
+                    cy = 0.5 * (coords[1] + coords[3]);
+                    ctx.lineTo(cx, cy);
 
-            for (var i=0; i<event.coords.length-3; i+=2)
-                draw(ctx, event.coords[i  ], event.coords[i+1],
-                          event.coords[i+2], event.coords[i+3]);
+                    for (var i=2; i<coords.length-3; i+=2)
+                    {
+                        cx = 0.5 * (coords[i  ] + coords[i+2]);
+                        cy = 0.5 * (coords[i+1] + coords[i+3]);
+                        ctx.quadraticCurveTo(coords[i], coords[i+1], cx, cy);
+                    }
+                }
+                ctx.lineTo(coords[coords.length-2], coords[coords.length-1]);
+                ctx.stroke();
+            }
+
+            // draw curve as poly-line
+            else
+            {
+                ctx.beginPath();
+                ctx.moveTo(event.coords[0], event.coords[1]);
+                ctx.lineTo(event.coords[0], event.coords[1]);
+                for (var i=2; i<event.coords.length-3; i+=2)
+                    ctx.lineTo(event.coords[i], event.coords[i+1]);
+                ctx.stroke();
+            }
         }
     };
 
@@ -1058,10 +1024,8 @@ var RevealChalkboard = (function(){
     /*
      * Erase the "curve" stored in event to canvas ID
      */
-    function eraseCurve( id, event )
+    function eraseCurve( ctx, event )
     {
-        var ctx = drawingCanvas[id].context;
-
         // old syntax
         if (event.curve)
         {
@@ -1121,16 +1085,11 @@ var RevealChalkboard = (function(){
             else
             {
                 showCursor(penCursor);
-                ctx.strokeStyle = penColor;
                 activeStroke = { type:  "draw", 
                                  color: penColor, 
-                                 coords: [mouseX, mouseY] };
-                draw(ctx, mouseX, mouseY, mouseX, mouseY);
+                                 coords: [mouseX, mouseY, mouseX, mouseY] };
+                drawCurve(ctx, activeStroke);
             }
-
-            // remember position
-            xLast  = mouseX;
-            yLast  = mouseY;
         }
 
         // don't propagate event any further
@@ -1152,8 +1111,16 @@ var RevealChalkboard = (function(){
             var mouseX = evt.offsetX / slideZoom;
             var mouseY = evt.offsetY / slideZoom;
 
+            // last position
+            var n = activeStroke.coords.length;
+            var lastX  = activeStroke.coords[n-2];
+            var lastY  = activeStroke.coords[n-1];
+
+            // (squared) distance to last mouse position
+            var dist = (mouseX-lastX)*(mouseX-lastX) + (mouseY-lastY)*(mouseY-lastY);
+
             // only do something if mouse position changed and we are within bounds
-            if ((mouseX!=xLast || mouseY!=yLast) &&
+            if ((dist > 4) &&
                 (mouseY < drawingCanvas[mode].canvas.height) && 
                 (mouseX < drawingCanvas[mode].canvas.width))
             {
@@ -1168,12 +1135,8 @@ var RevealChalkboard = (function(){
                 }
                 else
                 {
-                    draw(ctx, xLast, yLast, mouseX, mouseY);
+                    drawCurve(ctx, activeStroke);
                 }
-
-                // remember mouse position
-                xLast = mouseX;
-                yLast = mouseY;
             }
 
             // don't propagate event any further
@@ -1193,6 +1156,17 @@ var RevealChalkboard = (function(){
         {
             // don't propagate event any further
             killEvent(evt);
+
+            // duplicate last control point
+            if ( activeStroke.type == "curve" )
+            {
+                var n     = activeStroke.coords.length;
+                var lastX = activeStroke.coords[n-2];
+                var lastY = activeStroke.coords[n-1];
+                activeStroke.coords.push(lastX);
+                activeStroke.coords.push(lastY);
+                drawCurve(ctx, activeStroke);
+            }
 
             // save stroke to slide's event data
             recordEvent( activeStroke );
