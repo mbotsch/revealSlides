@@ -1085,9 +1085,12 @@ var RevealChalkboard = (function(){
             else
             {
                 showCursor(penCursor);
+                // add start point twice to get endpoint interpolation for quadratic splines
+                // but change if by one pixel to make single points more visible
+                // (lines from point to same point are too small)
                 activeStroke = { type:  "draw", 
                                  color: penColor, 
-                                 coords: [mouseX, mouseY, mouseX, mouseY] };
+                                 coords: [mouseX, mouseY, mouseX+1, mouseY] };
                 drawCurve(ctx, activeStroke);
             }
         }
@@ -1157,8 +1160,9 @@ var RevealChalkboard = (function(){
             // don't propagate event any further
             killEvent(evt);
 
-            // duplicate last control point
-            if ( activeStroke.type == "curve" )
+            // duplicate last control point to get endpoint interpolation
+            // of quadratic spline curves
+            if ( activeStroke.type == "draw" )
             {
                 var n     = activeStroke.coords.length;
                 var lastX = activeStroke.coords[n-2];
