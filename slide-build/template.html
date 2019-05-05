@@ -20,9 +20,8 @@
 	<!-- Theme of AG CG (derived from reveal's white.css) -->
 	<link rel="stylesheet" href="$template$/css/agcg.css">
 
-    <!-- font needed for chalkboard buttons -->
-    <!--<link rel="stylesheet" href="$template$/Font-Awesome/css/all.css">-->
-    <link rel="stylesheet" href="$template$/reveal.js-menu/font-awesome/css/all.css">
+    <!-- font needed for chalkboard buttons and menu -->
+    <link rel="stylesheet" href="$template$/Font-Awesome/css/all.css">
 
 	<!-- Setup code formatting with highlight.js -->
 	<link rel="stylesheet" href="$template$/cg-highlight/xcode.css">
@@ -170,7 +169,7 @@ $body$
       // setup reveal-menu
       menu: {
         side:              'right',
-        numbers:           false,
+        numbers:           true,
         titleSelector:     'h1',
         hideMissingTitles: false,
         markers:           false,
@@ -179,7 +178,8 @@ $body$
         transitions:       false,
         openButton:        false,
         openSlideNumber:   true,
-        keyboard:          true
+        keyboard:          true,
+        loadIcons:         false
       },
 
 
@@ -225,16 +225,17 @@ $body$
 
       // load plugins
 	  dependencies: [
-      { src: '$template$/reveal.js-menu/menu.js', async: true },
       { src: '$template$/reveal.js-plugins/chart/Chart.min.js' },
       { src: '$template$/reveal.js-plugins/chart/csv2chart.js' },
       { src: '$template$/reveal.js/plugin/highlight/highlight.js' },
-	  { src: '$template$/cg-math/math.js' },
-      { src: '$template$/cg-chalkboard/chalkboard.js' }, 
-      { src: '$template$/cg-quiz/quiz.js' },
-      { src: '$template$/cg-footer/footer.js' },
-	  { src: '$template$/cg-notes/notes.js', async: true },
-      { src: '$template$/cg-zoom/zoom.js', async: true },
+	  { src: '$template$/mb-plugins/math/math.js' },
+      { src: '$template$/mb-plugins/chalkboard/chalkboard.js' }, 
+      { src: '$template$/mb-plugins/quiz/quiz.js' },
+      { src: '$template$/mb-plugins/footer/footer.js' },
+	  { src: '$template$/mb-plugins/notes/notes.js', async: true },
+      { src: '$template$/mb-plugins/zoom/zoom.js', async: true },
+      { src: '$template$/mb-plugins/search/search.js', async: true },
+      { src: '$template$/mb-plugins/menu/menu.js', async: true },
       ]
 
 	  });

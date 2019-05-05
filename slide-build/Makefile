@@ -7,9 +7,9 @@ HTML     := $(patsubst %.md, %.html, $(MD))
 
 OS       := $(shell uname -s)
 REVEAL   := ./revealSlides
-MACROS   := $(REVEAL)/macros.m4
-TEMPLATE := $(REVEAL)/template.html
-FILTER   := $(REVEAL)/pandoc-filter/$(OS)
+MACROS   := $(REVEAL)/slide-build/macros.m4
+TEMPLATE := $(REVEAL)/slide-build/template.html
+FILTER   := $(REVEAL)/slide-build/pandoc-filter/$(OS)
 
 ###  EXPLICIT RULES  ##########################################################
 

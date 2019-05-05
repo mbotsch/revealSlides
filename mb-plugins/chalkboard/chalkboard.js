@@ -556,18 +556,6 @@ var RevealChalkboard = (function(){
 
 
     /*
-     * User triggers PDF export (mapped to key 'p')
-     */
-    function pdfExport()
-    {
-        if (confirm("Leave/reload presentation to export PDF?"))
-        {
-            window.open("?print-pdf","_self")
-        }
-    }
-
-
-    /*
      * User triggers undo (mapped to key 'z')
      */
     function drawUndo()
@@ -1503,9 +1491,6 @@ var RevealChalkboard = (function(){
     Reveal.addEventListener( 'fragmentshown',  slideChanged );
     Reveal.addEventListener( 'fragmenthidden', slideChanged );
 
-    // trigger browser's print button when PDF has been created
-    Reveal.addEventListener( 'pdf-ready', function(){ setTimeout(window.print, 1000); } );
-
     // update GUI (button) on slide change
     Reveal.addEventListener( 'ready',          updateGUI );
     Reveal.addEventListener( 'slidechanged',   updateGUI );
@@ -1541,10 +1526,6 @@ var RevealChalkboard = (function(){
     Reveal.addKeyBinding( { keyCode: 90, key: 'Z', 
         description: 'Chalkboard Undo' }, 
         drawUndo );
-
-    Reveal.addKeyBinding( { keyCode: 80, key: 'P', 
-        description: 'Trigger Print/PDF-Export' }, 
-        pdfExport );
 
     Reveal.addKeyBinding( { keyCode: 13, key: 'Enter', 
         description: 'Add Page to Chalkboard' }, 
