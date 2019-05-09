@@ -16,7 +16,7 @@ var RevealChalkboard = (function(){
 
     var DEBUG  = false;
     var BEZIER = true;
-
+    var LOCAL_STORAGE = false;
 
     /************************************************************************
      ** Tools
@@ -650,6 +650,15 @@ var RevealChalkboard = (function(){
     {
         return new Promise( function(resolve) {
 
+            // DEBUG: local storage
+            if (LOCAL_STORAGE)
+            {
+                console.log("load from local storage");
+                storage = JSON.parse(localStorage['chalkboard']);
+                resolve();
+                return;
+            }
+
             // determine scribble filename
             var url = location.pathname;
             var basename = (url.split('\\').pop().split('/').pop().split('.'))[0];
@@ -976,10 +985,27 @@ var RevealChalkboard = (function(){
             {
                 var coords = event.coords;
                 var cx, cy;
-                ctx.beginPath();
-                ctx.moveTo(coords[0], coords[1]);
+                //ctx.beginPath();
+                //ctx.moveTo(coords[0], coords[1]);
+                //if (coords.length > 4)
+                //{
+                    //cx = 0.5 * (coords[0] + coords[2]);
+                    //cy = 0.5 * (coords[1] + coords[3]);
+                    //ctx.lineTo(cx, cy);
+
+                    //for (var i=2; i<coords.length-3; i+=2)
+                    //{
+                        //cx = 0.5 * (coords[i  ] + coords[i+2]);
+                        //cy = 0.5 * (coords[i+1] + coords[i+3]);
+                        //ctx.quadraticCurveTo(coords[i], coords[i+1], cx, cy);
+                    //}
+                //}
+                //ctx.lineTo(coords[coords.length-2], coords[coords.length-1]);
+                //ctx.stroke();
                 if (coords.length > 4)
                 {
+                    ctx.beginPath();
+                    ctx.moveTo(coords[0], coords[1]);
                     cx = 0.5 * (coords[0] + coords[2]);
                     cy = 0.5 * (coords[1] + coords[3]);
                     ctx.lineTo(cx, cy);
@@ -990,9 +1016,8 @@ var RevealChalkboard = (function(){
                         cy = 0.5 * (coords[i+1] + coords[i+3]);
                         ctx.quadraticCurveTo(coords[i], coords[i+1], cx, cy);
                     }
+                    ctx.stroke();
                 }
-                ctx.lineTo(coords[coords.length-2], coords[coords.length-1]);
-                ctx.stroke();
             }
 
             // draw curve as poly-line
@@ -1157,6 +1182,8 @@ var RevealChalkboard = (function(){
                 var lastY = activeStroke.coords[n-1];
                 activeStroke.coords.push(lastX);
                 activeStroke.coords.push(lastY);
+
+                var ctx = drawingCanvas[mode].context;
                 drawCurve(ctx, activeStroke);
             }
 
@@ -1455,6 +1482,13 @@ var RevealChalkboard = (function(){
     // Intercept page leave when data is not saved
     window.onbeforeunload = function(e)
     {
+        if (LOCAL_STORAGE)
+        {
+            console.log("save to local storage");
+            localStorage['chalkboard'] = JSON.stringify(storage);
+            return;
+        }
+
         if (needSave) return "blabla";
     }
 
