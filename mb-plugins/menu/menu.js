@@ -833,7 +833,6 @@ var RevealMenu = window.RevealMenu || (function(){
             else
             {
                 Reveal.addEventListener( 'pdf-ready', function(){ 
-                    console.log("MENU: trigger print");
                     setTimeout(window.print, 1000); 
                 });
             }
