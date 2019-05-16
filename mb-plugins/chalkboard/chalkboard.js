@@ -15,7 +15,6 @@
 var RevealChalkboard = (function(){
 
     var DEBUG  = false;
-    var BEZIER = true;
     var LOCAL_STORAGE = false;
 
     /************************************************************************
@@ -653,10 +652,14 @@ var RevealChalkboard = (function(){
             // DEBUG: local storage
             if (LOCAL_STORAGE)
             {
-                console.log("load from local storage");
-                storage = JSON.parse(localStorage['chalkboard']);
-                resolve();
-                return;
+                var data = localStorage.getItem('chalkboard');
+                if (data)
+                {
+                    console.log("load from local storage");
+                    storage = JSON.parse(data);
+                    resolve();
+                    return;
+                }
             }
 
             // determine scribble filename
@@ -755,11 +758,14 @@ var RevealChalkboard = (function(){
     {
         if ( id == undefined ) id = mode;
         if (!indices) indices = slideIndices;
+
+        // distinguish slide fragments only for slide annotations,
+        // not for chalkboard mode
         for (var i = 0; i < storage[id].data.length; i++)
         {
             if (storage[id].data[i].slide.h === indices.h &&
                 storage[id].data[i].slide.v === indices.v &&
-                storage[id].data[i].slide.f === indices.f )
+                (id==1 || storage[id].data[i].slide.f === indices.f) )
             {
                 return storage[id].data[i];
             }
@@ -778,11 +784,14 @@ var RevealChalkboard = (function(){
     {
         if ( id == undefined ) id = mode;
         if (!indices) indices = slideIndices;
+
+        // distinguish slide fragments only for slide annotations,
+        // not for chalkboard mode
         for (var i = 0; i < storage[id].data.length; i++)
         {
             if (storage[id].data[i].slide.h === indices.h &&
                 storage[id].data[i].slide.v === indices.v &&
-                storage[id].data[i].slide.f === indices.f )
+                (id==1 || storage[id].data[i].slide.f === indices.f) )
             {
                 return storage[id].data[i].events.length > 0;
             }
@@ -801,28 +810,79 @@ var RevealChalkboard = (function(){
     {
         console.log("chalkboard: create printout");
 
-        var nextSlide = [];
+        // slide dimensions
         var width   = Reveal.getConfig().width;
         var height  = Reveal.getConfig().height;
 
+
+        // slide annotations
+        for (var i = 0; i < storage[0].data.length; i++)
+        {
+            // get slide indices
+            var h = storage[0].data[i].slide.h;
+            var v = storage[0].data[i].slide.v;
+            var f = storage[0].data[i].slide.f;
+
+            // only use scribble on slides with fragments when fragments are
+            // exported as separate PDF pages
+            if (f != undefined && !Reveal.getConfig().pdfSeparateFragments)
+                continue;
+
+            // get slide data
+            var slide = (f!=undefined) ? Reveal.getSlide(h,v,f) : Reveal.getSlide(h,v);
+            var slideData = getSlideData( storage[0].data[i].slide, 0 );
+
+            // draw strokes to image
+            var canvas = drawingCanvas[0].canvas;
+            var ctx = canvas.getContext("2d");
+            clearCanvas(ctx);
+            for (var j = 0; j < slideData.events.length; j++)
+                playEvent(ctx, slideData.events[j]);
+
+            // convert canvas to image, add to slide
+            var img = new Image();
+            img.src = canvas.toDataURL();
+            img.style.position  = "absolute";
+            img.style.top       = "0px";
+            img.style.left      = "0px";
+            img.style.width     = width + "px";
+            img.style.height    = height + "px";
+            img.style.border    = "none";
+            img.style.boxSizing = "border-box";
+            img.style.zIndex    = "34";
+            slide.appendChild( img );
+
+            // clear canvas again
+            clearCanvas(ctx);
+
+            // add fragment data
+            if (f != undefined)
+            {
+                assignFragmentIndex( slide ); // we need fragment-index per fragment!
+                img.classList.add("fragment");
+                img.classList.add("sequence");
+                img.setAttribute("data-fragment-index", f);
+            }
+        }
+
+
         // collect next-slides for all slides with board stuff
+        var nextSlide = [];
         for (var i = 0; i < storage[1].data.length; i++)
         {
             var h = storage[1].data[i].slide.h;
             var v = storage[1].data[i].slide.v;
-            var f = storage[1].data[i].slide.f;
-            var slide = f ? Reveal.getSlide(h,v,f) : Reveal.getSlide(h,v);
+            var slide = Reveal.getSlide(h,v);
             nextSlide.push( slide.nextSibling );
         }
+
 
         // go through board storage, paint image, insert slide
         for (var i = 0; i < storage[1].data.length; i++)
         {
             var h = storage[1].data[i].slide.h;
             var v = storage[1].data[i].slide.v;
-            var f = storage[1].data[i].slide.f;
-            var slide = f ? Reveal.getSlide(h,v,f) : Reveal.getSlide(h,v);
-
+            var slide = Reveal.getSlide(h,v);
             var slideData = getSlideData( storage[1].data[i].slide, 1 );
 
             var parent = Reveal.getSlide( storage[1].data[i].slide.h, storage[1].data[i].slide.v ).parentElement;
@@ -871,6 +931,51 @@ var RevealChalkboard = (function(){
         }
     }
 
+
+    /*
+     * this function is (mostly) copied from reveal.js.
+     * it sorts fragments and assigns a data-fragment-index to each fragment
+     */
+	function assignFragmentIndex( slide ) 
+    {
+        // all fragments of current slide
+        var fragments = slide.querySelectorAll( '.fragment' );
+		fragments = Array.prototype.slice.call( fragments );
+
+		var ordered = [],
+			unordered = [],
+			sorted = [];
+
+		// Group ordered and unordered elements
+		fragments.forEach( function( fragment, i ) {
+			if( fragment.hasAttribute( 'data-fragment-index' ) ) {
+				var index = parseInt( fragment.getAttribute( 'data-fragment-index' ), 10 );
+				if( !ordered[index] ) ordered[index] = [];
+				ordered[index].push( fragment );
+			}
+			else {
+				unordered.push( [ fragment ] );
+			}
+		} );
+
+		// Append fragments without explicit indices in their
+		// DOM order
+		ordered = ordered.concat( unordered );
+
+		// Manually count the index up per group to ensure there
+		// are no gaps
+		var index = 0;
+
+		// Push all fragments in their sorted order to an array,
+		// this flattens the groups
+		ordered.forEach( function( group ) {
+			group.forEach( function( fragment ) {
+				sorted.push( fragment );
+				fragment.setAttribute( 'data-fragment-index', index );
+			} );
+			index ++;
+		} );
+	}
 
 
     /*****************************************************************
@@ -981,53 +1086,22 @@ var RevealChalkboard = (function(){
             ctx.strokeStyle = event.color;
 
             // draw curve as quadratic spline
-            if (BEZIER)
-            {
-                var coords = event.coords;
-                var cx, cy;
-                //ctx.beginPath();
-                //ctx.moveTo(coords[0], coords[1]);
-                //if (coords.length > 4)
-                //{
-                    //cx = 0.5 * (coords[0] + coords[2]);
-                    //cy = 0.5 * (coords[1] + coords[3]);
-                    //ctx.lineTo(cx, cy);
-
-                    //for (var i=2; i<coords.length-3; i+=2)
-                    //{
-                        //cx = 0.5 * (coords[i  ] + coords[i+2]);
-                        //cy = 0.5 * (coords[i+1] + coords[i+3]);
-                        //ctx.quadraticCurveTo(coords[i], coords[i+1], cx, cy);
-                    //}
-                //}
-                //ctx.lineTo(coords[coords.length-2], coords[coords.length-1]);
-                //ctx.stroke();
-                if (coords.length > 4)
-                {
-                    ctx.beginPath();
-                    ctx.moveTo(coords[0], coords[1]);
-                    cx = 0.5 * (coords[0] + coords[2]);
-                    cy = 0.5 * (coords[1] + coords[3]);
-                    ctx.lineTo(cx, cy);
-
-                    for (var i=2; i<coords.length-3; i+=2)
-                    {
-                        cx = 0.5 * (coords[i  ] + coords[i+2]);
-                        cy = 0.5 * (coords[i+1] + coords[i+3]);
-                        ctx.quadraticCurveTo(coords[i], coords[i+1], cx, cy);
-                    }
-                    ctx.stroke();
-                }
-            }
-
-            // draw curve as poly-line
-            else
+            var coords = event.coords;
+            var cx, cy;
+            if (coords.length > 4)
             {
                 ctx.beginPath();
-                ctx.moveTo(event.coords[0], event.coords[1]);
-                ctx.lineTo(event.coords[0], event.coords[1]);
-                for (var i=2; i<event.coords.length-3; i+=2)
-                    ctx.lineTo(event.coords[i], event.coords[i+1]);
+                ctx.moveTo(coords[0], coords[1]);
+                cx = 0.5 * (coords[0] + coords[2]);
+                cy = 0.5 * (coords[1] + coords[3]);
+                ctx.lineTo(cx, cy);
+
+                for (var i=2; i<coords.length-3; i+=2)
+                {
+                    cx = 0.5 * (coords[i  ] + coords[i+2]);
+                    cy = 0.5 * (coords[i+1] + coords[i+3]);
+                    ctx.quadraticCurveTo(coords[i], coords[i+1], cx, cy);
+                }
                 ctx.stroke();
             }
         }
