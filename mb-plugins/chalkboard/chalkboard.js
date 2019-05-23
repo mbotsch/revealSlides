@@ -834,7 +834,7 @@ var RevealChalkboard = (function(){
 
             // draw strokes to image
             var canvas = drawingCanvas[0].canvas;
-            var ctx = canvas.getContext("2d");
+            var ctx    = drawingCanvas[0].context;
             clearCanvas(ctx);
             for (var j = 0; j < slideData.events.length; j++)
                 playEvent(ctx, slideData.events[j]);
@@ -887,19 +887,14 @@ var RevealChalkboard = (function(){
 
             var parent = Reveal.getSlide( storage[1].data[i].slide.h, storage[1].data[i].slide.v ).parentElement;
 
-            // adjust slide height to be multiple of pageHeight and to fit slideHeight
-            var pageHeight  = height;
-            var slideHeight = Math.max(pageHeight, chalkboardHeight( storage[1].data[i].slide ));
-            var height = pageHeight * (Math.ceil(slideHeight/pageHeight));
-
-            // generate image canvas
+            // setup image canvas
             var canvas = drawingCanvas[1].canvas;
-            var ctx = canvas.getContext("2d");
-            penColor = "black";
+            var ctx    = drawingCanvas[1].context;
             adjustChalkboardHeight( storage[1].data[i].slide );
             ctx.fillStyle = "white";
-            ctx.rect(0,0,canvas.width,canvas.height);
+            ctx.rect(0, 0, canvas.width/canvasScale, canvas.height/canvasScale);
             ctx.fill();
+            penColor = "black";
 
             // draw strokes to image
             for (var j = 0; j < slideData.events.length; j++)
@@ -910,14 +905,22 @@ var RevealChalkboard = (function(){
             {
                 var newSlide = document.createElement( 'section' );
                 newSlide.classList.add( 'present' );
-                newSlide.innerHTML = '<h1 style="visibility:hidden">Drawing</h1>';
-                newSlide.setAttribute("data-background-size", '100% 100%' );
-                newSlide.setAttribute("data-background-repeat", 'no-repeat' );
-                newSlide.setAttribute("data-background-position", 'center' );
-                newSlide.setAttribute("data-background", 'url("' + canvas.toDataURL("image/png") +'")' );
+                newSlide.innerHTML = '<h1 style="visibility:hidden">Chalkboard Drawing</h1>';
+                newSlide.style.width  = "100%";
+                newSlide.style.height = canvas.height/canvasScale + "px";
 
-                // create oversize slide, which Reveal breaks down into multiple PDF pages
-                newSlide.style.height = canvas.height + "px";
+                // convert canvas to image, add to slide
+                var img = new Image();
+                img.src = canvas.toDataURL();
+                img.style.position  = "absolute";
+                img.style.top       = "0px";
+                img.style.left      = "0px";
+                img.style.width     = "100%";
+                img.style.height    = "auto";
+                img.style.border    = "none";
+                img.style.boxSizing = "border-box";
+                img.style.zIndex    = "34";
+                newSlide.appendChild( img );
 
                 if ( nextSlide[i] != null ) {
                     parent.insertBefore( newSlide, nextSlide[i] );
