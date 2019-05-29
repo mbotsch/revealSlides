@@ -437,9 +437,9 @@ var RevealChalkboard = (function(){
         var height = 1;
 
         // find maximum y-coordinate of slide's curves
-        if (hasSlideData(slideIndices, 1))
+        if (hasSlideData(indices, 1))
         {
-            var slideData = getSlideData(slideIndices, 1);
+            var slideData = getSlideData(indices, 1);
             for (var i=0; i<slideData.events.length; i++)
             {
                 var event = slideData.events[i];
@@ -814,6 +814,20 @@ var RevealChalkboard = (function(){
         var width   = Reveal.getConfig().width;
         var height  = Reveal.getConfig().height;
 
+        // setup canvas
+        var canvasScale = 2.0;
+        var canvas = document.createElement( 'canvas' );
+        canvas.style.background = "rgba(0,0,0,0)";
+        canvas.style.border     = "none";
+        canvas.style.width      = width  + "px";
+        canvas.style.height     = height + "px";
+        canvas.width            = width  * canvasScale;
+        canvas.height           = height * canvasScale;
+        var ctx = canvas.getContext("2d");
+        ctx.scale(canvasScale, canvasScale);
+        ctx.lineCap   = 'round';
+        ctx.lineJoint = 'round';
+        ctx.lineWidth = 2;
 
         // slide annotations
         for (var i = 0; i < storage[0].data.length; i++)
@@ -833,8 +847,6 @@ var RevealChalkboard = (function(){
             var slideData = getSlideData( storage[0].data[i].slide, 0 );
 
             // draw strokes to image
-            var canvas = drawingCanvas[0].canvas;
-            var ctx    = drawingCanvas[0].context;
             clearCanvas(ctx);
             for (var j = 0; j < slideData.events.length; j++)
                 playEvent(ctx, slideData.events[j]);
@@ -880,47 +892,53 @@ var RevealChalkboard = (function(){
         // go through board storage, paint image, insert slide
         for (var i = 0; i < storage[1].data.length; i++)
         {
-            var h = storage[1].data[i].slide.h;
-            var v = storage[1].data[i].slide.v;
-            var slide = Reveal.getSlide(h,v);
+            var h         = storage[1].data[i].slide.h;
+            var v         = storage[1].data[i].slide.v;
+            var slide     = Reveal.getSlide(h,v);
             var slideData = getSlideData( storage[1].data[i].slide, 1 );
+            var parent    = Reveal.getSlide( storage[1].data[i].slide.h, storage[1].data[i].slide.v ).parentElement;
 
-            var parent = Reveal.getSlide( storage[1].data[i].slide.h, storage[1].data[i].slide.v ).parentElement;
-
-            // setup image canvas
-            var canvas = drawingCanvas[1].canvas;
-            var ctx    = drawingCanvas[1].context;
-            adjustChalkboardHeight( storage[1].data[i].slide );
-            ctx.fillStyle = "white";
-            ctx.rect(0, 0, canvas.width/canvasScale, canvas.height/canvasScale);
-            ctx.fill();
-            penColor = "black";
-
-            // draw strokes to image
-            for (var j = 0; j < slideData.events.length; j++)
-                playEvent(ctx, slideData.events[j]);
-
-            // create new slide element
             if ( slideData.events.length )
             {
+                // setup image canvas
+                var scribbleHeight  = chalkboardHeight( storage[1].data[i].slide );
+                var canvasHeight    = height * Math.max(1, Math.ceil(scribbleHeight/height));
+                canvas.width        = width * canvasScale;
+                canvas.height       = canvasHeight * canvasScale;
+                canvas.style.height = canvasHeight + "px";
+                canvas.style.background = "white";
+                ctx.scale(canvasScale, canvasScale);
+                ctx.fillStyle = "white";
+                ctx.rect(0, 0, canvas.width/canvasScale, canvas.height/canvasScale);
+                ctx.fill();
+                penColor = "black";
+
+                // draw strokes to image
+                for (var j = 0; j < slideData.events.length; j++)
+                    playEvent(ctx, slideData.events[j]);
+
+                // create new slide element
                 var newSlide = document.createElement( 'section' );
                 newSlide.classList.add( 'present' );
                 newSlide.innerHTML = '<h1 style="visibility:hidden">Chalkboard Drawing</h1>';
                 newSlide.style.width  = "100%";
                 newSlide.style.height = canvas.height/canvasScale + "px";
 
-                // convert canvas to image, add to slide
+                // convert canvas to image, add image to slide
                 var img = new Image();
                 img.src = canvas.toDataURL();
                 img.style.position  = "absolute";
                 img.style.top       = "0px";
                 img.style.left      = "0px";
-                img.style.width     = "100%";
-                img.style.height    = "auto";
+                img.style.width     = width + "px";
+                img.style.height    = canvasHeight + "px";
+                img.style.maxHeight = canvasHeight + "px";
                 img.style.border    = "none";
                 img.style.boxSizing = "border-box";
                 img.style.zIndex    = "34";
                 newSlide.appendChild( img );
+                console.log("image height: " + img.style.height);
+                console.log("slide height: " + newSlide.style.height);
 
                 if ( nextSlide[i] != null ) {
                     parent.insertBefore( newSlide, nextSlide[i] );
