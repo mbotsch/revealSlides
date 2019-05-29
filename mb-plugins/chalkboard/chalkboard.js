@@ -860,6 +860,7 @@ var RevealChalkboard = (function(){
             img.style.width     = width + "px";
             img.style.height    = height + "px";
             img.style.border    = "none";
+            img.style.margin    = "0px";
             img.style.boxSizing = "border-box";
             img.style.zIndex    = "34";
             slide.appendChild( img );
@@ -934,7 +935,7 @@ var RevealChalkboard = (function(){
                 img.style.height    = canvasHeight + "px";
                 img.style.maxHeight = canvasHeight + "px";
                 img.style.border    = "none";
-                img.style.boxSizing = "border-box";
+                img.style.margin    = "0px";
                 img.style.zIndex    = "34";
                 newSlide.appendChild( img );
                 console.log("image height: " + img.style.height);
