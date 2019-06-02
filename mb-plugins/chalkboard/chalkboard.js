@@ -165,7 +165,7 @@ var RevealChalkboard = (function(){
     container.style.transition = "none";
     container.style.margin     = "0";
     container.style.padding    = "0";
-    container.style.border     = "1px solid " + background;
+    container.style.border     = "1px solid transparent";
     container.style.boxSizing  = "content-box";
     container.style.position   = "absolute";
     container.style.top        = "0px";
@@ -421,7 +421,7 @@ var RevealChalkboard = (function(){
         }
         else
         {
-            container.style.border = "1px solid " + background;
+            container.style.border = "1px solid transparent";
             drawingCanvas[mode].canvas.style.pointerEvents = "none";
         }
     }

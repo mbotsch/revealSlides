@@ -301,10 +301,10 @@ body {
     display: inline;
     padding: 0.2em;
     text-align: left;
-    font-size: 85%;
+    /*font-size: 85%;*/
     font-family: monospace;
     word-wrap: normal;
-    background-color: #f7f7f7;
+    /*background-color: #f7f7f7;*/
 }
 
 /* block of code (has to override above inline code)*/
