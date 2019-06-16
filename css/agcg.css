@@ -904,4 +904,6 @@ body {
     visibility: visible;
 }
 
-
+.reveal .transparent {
+    opacity: 0.1;
+}
