@@ -123,7 +123,7 @@ var RevealChalkboard = (function(){
         b.style.padding  = "3px";
         b.style.borderRadius = "3px";
         b.style.color    = "lightgrey";
-        b.style.background = background;
+        //b.style.background = background;
         if (icon)
         {
             b.classList.add("fas");
@@ -177,6 +177,7 @@ var RevealChalkboard = (function(){
     container.style.pointerEvents = "none";
     container.style.overflowX = 'hidden';
     container.style.overflowY = 'hidden';
+    container.style.touchAction = 'pan-y'; // avoid Chrome's 'go-back' by horizontal swipe
     container.style.WebkitOverflowScrolling = 'auto';
     slides.appendChild( container );
 
@@ -211,7 +212,10 @@ var RevealChalkboard = (function(){
         canvas.style.left = "0px";
 
         // setup highDPI scaling & draw style
-        var ctx = canvas.getContext("2d");
+        var opts = {lowLatency: true, desynchronized: true};
+        var ctx = canvas.getContext("2d", opts);
+        if (ctx.getContextAttributes && ctx.getContextAttributes().desynchronized)
+            console.log('Low latency canvas supported!');
         ctx.scale(canvasScale, canvasScale);
         ctx.lineCap   = 'round';
         ctx.lineJoint = 'round';
