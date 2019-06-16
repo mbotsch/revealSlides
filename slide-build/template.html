@@ -152,6 +152,9 @@ $body$
       center:       false,
       transition:   'none',
       viewDistance: 2, // otherwise videos start early
+$if(preloadIframes)$ 
+      preloadIframes: $preloadIframes$,
+$endif$
       width:        $if(width)$  $width$  $else$ 1024 $endif$,
       height:       $if(height)$ $height$ $else$  768 $endif$,
       minScale:     0.2,
@@ -163,7 +166,8 @@ $body$
 
 
       // use local mathjax installation, use CommonHTML
-      math: { mathjax: '$template$/MathJax/MathJax.js' },
+      // temporarily avoid CommonHTML due to Chrome bug
+      math: { mathjax: '$template$/MathJax/MathJax.js', config: 'TeX-AMS_HTML-full' },
 
 
       // setup reveal-menu
