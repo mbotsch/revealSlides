@@ -13,36 +13,26 @@ FILTER   := $(REVEAL)/slide-build/pandoc-filter/$(OS)
 
 ###  EXPLICIT RULES  ##########################################################
 
-.PHONY: html setup server clean allclean
+.PHONY: html setup server clean 
 
 html: Makefile $(HTML)
 
-setup: Makefile package.json gruntfile.js
-	@npm install
-
 Makefile: $(REVEAL)/slide-build/Makefile
-	@\cp $(REVEAL)/slide-build/Makefile .
+	@\cp -f $(REVEAL)/slide-build/Makefile .
+	$(warning Local Makefile updated from $(REVEAL)/slide-build/. Please re-run make.)
 
-package.json: $(REVEAL)/slide-build/package.json
-	@\cp $(REVEAL)/slide-build/package.json .
-
-gruntfile.js: $(REVEAL)/slide-build/gruntfile.js
-	@\cp $(REVEAL)/slide-build/gruntfile.js .
+setup:
+	@cd $(REVEAL) && npm install
 
 server: setup html
-	@npm start
+	@grunt --gruntfile $(REVEAL)/gruntfile.js -b $(REVEAL)/ --root=`pwd`
 
 $(HTML): $(SRC) $(TEMPLATE) $(MACROS)
 
 clean:
 	rm -f $(HTML)
 
-allclean:
-	rm -rf $(HTML) package.json gruntfile.js node_modules
-
-
 ###  IMPLICIT RULES  ##########################################################
-
 
 %.html: %.md
 	m4 $(MACROS) $< | \

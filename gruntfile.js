@@ -1,5 +1,7 @@
 module.exports = function(grunt) {
 
+    let root = grunt.option('root');
+
 	grunt.initConfig({
 
 		pkg: grunt.file.readJSON('package.json'),
@@ -8,9 +10,9 @@ module.exports = function(grunt) {
 			server: {
 				options: {
 					port: 8000,
-					base: '.',
+                    base: root,
 					livereload: true,
-					open: true,
+					open: false,
 					useAvailablePort: true
 				}
 			}
@@ -18,10 +20,10 @@ module.exports = function(grunt) {
 
 		watch: {
 			html: {
-				files: ['*.html']
+				files: [root + '/*.html']
 			},
 			markdown: {
-				files: ['*.md'],
+				files: [root + '/*.md'],
                 options: { spawn: false },
 				tasks: ['exec:pandoc']
 			},
@@ -32,7 +34,7 @@ module.exports = function(grunt) {
 
         exec: {
             pandoc: {
-                command: 'make'
+                command: 'make --directory ' + root + ' html'
             }
         }
 
