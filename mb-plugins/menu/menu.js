@@ -510,13 +510,20 @@ var RevealMenu = window.RevealMenu || (function(){
 						return button;
 					}
 
-					addToolbarButton('Slides', 'Slides', 'fa-images', 'fas', openPanel, true);
 
+                    // MARIO: why do we need this?
+					//addToolbarButton('Slides', 'Slides', 'fa-images', 'fas', openPanel, true);
 
                     // MARIO: trigger search of RevealSearch plugin
 					addToolbarButton('Search', 'Search', 'fa-search', 'fas', function(){
                         closeMenu();
                         RevealSearch.open();
+                    }, true);
+
+                    // MARIO: download slides annotations of whiteboard plugin
+					addToolbarButton('Download', 'Download', 'fa-edit', 'fas', function(){
+                        closeMenu();
+                        RevealWhiteboard.downloadNotes();
                     }, true);
 
                     // MARIO: trigger PDF export
