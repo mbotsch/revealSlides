@@ -12,7 +12,7 @@ module.exports = function(grunt) {
 					port: 8000,
                     base: root,
 					livereload: true,
-					open: false,
+					open: true,
 					useAvailablePort: true
 				}
 			}
