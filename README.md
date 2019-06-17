@@ -1,10 +1,12 @@
 # revealSlides
 
-This repository contains a framework for producing interactive HTML slides using markdown, 
+This repository contains a framework for producing interactive HTML slides 
+using [markdown](https://daringfireball.net/projects/markdown/syntax), 
 [pandoc](https://pandoc.org/), and [reveal.js](https://pandoc.org/). It also uses a couple
-of other cool Javascript packages for reveal.js.
+of other cool Javascript packages for reveal plugins.
 
-The framework is tested on Linux and MacOS.
+The framework for slide-building is tested on Linux and MacOS, although the resulting HTML slides
+will work with any operating system and browser.
 
 See <https://pmp-library.github.io/pmp-slides/slides.html> for a demo of the interactive capabilities.
 
