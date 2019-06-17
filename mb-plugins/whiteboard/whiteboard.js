@@ -1,21 +1,24 @@
 /*****************************************************************
+ * 
+ *  A plugin for reveal.js to add slide annotations and a whiteboard.
+ * 
  *  Original version by Asvin Goel, goel@telematique.eu (based on v 0.6)
  *  Modified version by Mario Botsch, Bielefeld University
  *  Further contributions by Martin Heistermann, Bern University
  * 
- *  A plugin for reveal.js adding a chalkboard.
+ *  License: MIT license 
  * 
- *  License: MIT license (see LICENSE.md)
  ******************************************************************/
 
 
 "use strict";
 
 
-var RevealChalkboard = (function(){
+var RevealWhiteboard = (function(){
 
     var DEBUG  = false;
     var LOCAL_STORAGE = false;
+
 
     /************************************************************************
      ** Tools
@@ -31,7 +34,7 @@ var RevealChalkboard = (function(){
         if (document.currentScript) {
             src = document.currentScript.src;
         } else {
-            var sel = document.querySelector('script[src$="/chalkboard.js"]')
+            var sel = document.querySelector('script[src$="/whiteboard.js"]')
             if (sel) {
                 src = sel.src;
             }
@@ -52,7 +55,7 @@ var RevealChalkboard = (function(){
     var path = scriptPath();
 
     // default values or user configuration?
-    var config     = Reveal.getConfig().chalkboard || {};
+    var config     = Reveal.getConfig().whiteboard || {};
     var colors     = config.colors || [ "black", "red", "green", "blue", "yellow", "cyan", "magenta" ];
     var background = config.background || "white";
 
@@ -72,7 +75,7 @@ var RevealChalkboard = (function(){
     cursorCanvas.width  = 20;
     cursorCanvas.height = 20;
 
-    // different cursors used by chalkboard
+    // different cursors used by whiteboard
     var eraserCursor = 'url("' + path + 'sponge.png") 25 20, auto';
     var eraserRadius = 15;
     var laserCursor;
@@ -112,7 +115,7 @@ var RevealChalkboard = (function(){
     function createButton(left, bottom, icon)
     {
         var b = document.createElement( 'div' );
-        b.classList.add("chalkboard");
+        b.classList.add("whiteboard");
         b.style.position = "absolute";
         b.style.zIndex   = 40;
         b.style.left     = left + "px";
@@ -134,7 +137,7 @@ var RevealChalkboard = (function(){
     }
 
     var buttonBoard      = createButton(8, 8, "fa-edit");
-    buttonBoard.onclick  = function(){ toggleChalkboard(); }
+    buttonBoard.onclick  = function(){ toggleWhiteboard(); }
 
     var buttonPen        = createButton(8, 40, "fa-pen");
     buttonPen.onclick    = function(){ 
@@ -152,7 +155,7 @@ var RevealChalkboard = (function(){
     // add color picker to long-tap of buttonPen
     var pkdiv = createButton(40, 40);
     pkdiv.setAttribute("class", "color-picker");
-    var pkoptions = { template: "<div class=\"chalkboard\" data-col=\"{color}\" style=\"background-color: {color}\"></div>" };
+    var pkoptions = { template: "<div class=\"whiteboard\" data-col=\"{color}\" style=\"background-color: {color}\"></div>" };
     var pk = new Piklor(pkdiv, colors, pkoptions);
     pk.colorChosen(function (col) { penColor = col; updateGUI(); });
     var pktimer;
@@ -183,7 +186,7 @@ var RevealChalkboard = (function(){
 
 
     // create canvases
-    var drawingCanvas = [ {id: "notescanvas" }, {id: "chalkboard" } ];
+    var drawingCanvas = [ {id: "annotations" }, {id: "whiteboard" } ];
     setupDrawingCanvas(0);
     setupDrawingCanvas(1);
 
@@ -433,7 +436,7 @@ var RevealChalkboard = (function(){
     /*
      * return height of current scribbles (max y-coordinate)
      */
-    function chalkboardHeight( indices ) 
+    function whiteboardHeight( indices ) 
     { 
         if (!indices) indices = slideIndices;
 
@@ -481,19 +484,19 @@ var RevealChalkboard = (function(){
     /*
      * adjust board height to fit scribbles
      */
-    function adjustChalkboardHeight( indices ) 
+    function adjustWhiteboardHeight( indices ) 
     { 
         if (!indices) indices = slideIndices;
         var pageHeight     = Reveal.getConfig().height;
-        var scribbleHeight = chalkboardHeight( indices );
+        var scribbleHeight = whiteboardHeight( indices );
         var height = pageHeight * Math.max(1, Math.ceil(scribbleHeight/pageHeight));
-        setChalkboardHeight(height);
+        setWhiteboardHeight(height);
     }
 
     /*
-     * set chalkboard height to specified value
+     * set whiteboard height to specified value
      */
-    function setChalkboardHeight(height)
+    function setWhiteboardHeight(height)
     {
         // set canvas properties
         var canvas = drawingCanvas[1].canvas;
@@ -517,14 +520,14 @@ var RevealChalkboard = (function(){
     }
 
     /*
-     * add one page to chalkboard (only when drawing on back-board!)
+     * add one page to whiteboard (only when drawing on back-board!)
      */
-    function addChalkboardPage()
+    function addWhiteboardPage()
     {
         if (!tool || mode!=1) return;
         var pageHeight  = Reveal.getConfig().height;
         var boardHeight = drawingCanvas[1].canvas.clientHeight;
-        setChalkboardHeight( boardHeight + pageHeight );
+        setWhiteboardHeight( boardHeight + pageHeight );
         playbackEvents(1);
     }
 
@@ -542,7 +545,7 @@ var RevealChalkboard = (function(){
         if ( ok )
         {
             activeStroke = null;
-            closeChalkboard();
+            closeWhiteboard();
 
             clearCanvas( drawingCanvas[0].context );
             clearCanvas( drawingCanvas[1].context );
@@ -573,26 +576,26 @@ var RevealChalkboard = (function(){
 
 
     /*
-     * Toggle chalkboard visibility (mapped to 't')
+     * Toggle whiteboard visibility (mapped to 't')
      */
-    function toggleChalkboard()
+    function toggleWhiteboard()
     {
         if ( boardMode )
         {
-            closeChalkboard();
+            closeWhiteboard();
         }
         else
         {
-            showChalkboard();
+            showWhiteboard();
         }
         updateGUI();
     };
 
 
     /**
-     * Opens an overlay for the chalkboard.
+     * Opens an overlay for the whiteboard.
      */
-    function showChalkboard()
+    function showWhiteboard()
     {
         activeStroke = null;
         mode         = 1;
@@ -605,15 +608,15 @@ var RevealChalkboard = (function(){
 
         // show board, adjust height, re-draw scribbles
         drawingCanvas[1].canvas.style.visibility = "visible";
-        adjustChalkboardHeight();
+        adjustWhiteboardHeight();
         playbackEvents(1);
     }
 
 
     /**
-     * Closes open chalkboard.
+     * Closes open whiteboard.
      */
-    function closeChalkboard()
+    function closeWhiteboard()
     {
         activeStroke = null;
         mode         = 0;
@@ -656,7 +659,7 @@ var RevealChalkboard = (function(){
             // DEBUG: local storage
             if (LOCAL_STORAGE)
             {
-                var data = localStorage.getItem('chalkboard');
+                var data = localStorage.getItem('whiteboard');
                 if (data)
                 {
                     console.log("load from local storage");
@@ -671,7 +674,7 @@ var RevealChalkboard = (function(){
             var basename = (url.split('\\').pop().split('/').pop().split('.'))[0];
             var filename = basename + '.json';
 
-            console.log("chalkboard load " + filename);
+            console.log("whiteboard load " + filename);
             var req = new XMLHttpRequest();
 
             req.onload = function()
@@ -685,9 +688,9 @@ var RevealChalkboard = (function(){
                             storage = JSON.parse(req.responseText);
                             if ( drawingCanvas[0].width != storage[0].width || drawingCanvas[0].height != storage[0].height )
                             {
-                                alert("Chalkboard: Loaded data does not match width/height of presentation");
+                                alert("Whiteboard: Loaded data does not match width/height of presentation");
                             }
-                            console.log("chalkboard loaded");
+                            console.log("whiteboard loaded");
                         }
                         catch(err)
                         {
@@ -724,10 +727,10 @@ var RevealChalkboard = (function(){
     /*
      * download scribbles to user's Download directory
      */
-    function downloadData()
+    function downloadNotes()
     {
         var a = document.createElement('a');
-        a.classList.add("chalkboard"); // otherwise a.click() is prevented/cancelled by global listener
+        a.classList.add("whiteboard"); // otherwise a.click() is prevented/cancelled by global listener
         document.body.appendChild(a);
         try {
             // function to adjust precision of numbers when converting to JSON
@@ -746,7 +749,7 @@ var RevealChalkboard = (function(){
 
         } catch( error ) {
             a.innerHTML += " (" + error + ")";
-            console.error("chalkboard download error: " + error);
+            console.error("whiteboard download error: " + error);
         }
         a.click();
         document.body.removeChild(a);
@@ -764,7 +767,7 @@ var RevealChalkboard = (function(){
         if (!indices) indices = slideIndices;
 
         // distinguish slide fragments only for slide annotations,
-        // not for chalkboard mode
+        // not for whiteboard mode
         for (var i = 0; i < storage[id].data.length; i++)
         {
             if (storage[id].data[i].slide.h === indices.h &&
@@ -790,7 +793,7 @@ var RevealChalkboard = (function(){
         if (!indices) indices = slideIndices;
 
         // distinguish slide fragments only for slide annotations,
-        // not for chalkboard mode
+        // not for whiteboard mode
         for (var i = 0; i < storage[id].data.length; i++)
         {
             if (storage[id].data[i].slide.h === indices.h &&
@@ -812,7 +815,7 @@ var RevealChalkboard = (function(){
 
     function createPrintout( )
     {
-        console.log("chalkboard: create printout");
+        console.log("whiteboard: create printout");
 
         // slide dimensions
         var width   = Reveal.getConfig().width;
@@ -906,7 +909,7 @@ var RevealChalkboard = (function(){
             if ( slideData.events.length )
             {
                 // setup image canvas
-                var scribbleHeight  = chalkboardHeight( storage[1].data[i].slide );
+                var scribbleHeight  = whiteboardHeight( storage[1].data[i].slide );
                 var canvasHeight    = height * Math.max(1, Math.ceil(scribbleHeight/height));
                 canvas.width        = width * canvasScale;
                 canvas.height       = canvasHeight * canvasScale;
@@ -925,7 +928,7 @@ var RevealChalkboard = (function(){
                 // create new slide element
                 var newSlide = document.createElement( 'section' );
                 newSlide.classList.add( 'present' );
-                newSlide.innerHTML = '<h1 style="visibility:hidden">Chalkboard Drawing</h1>';
+                newSlide.innerHTML = '<h1 style="visibility:hidden">Whiteboard Drawing</h1>';
                 newSlide.style.width  = "100%";
                 newSlide.style.height = canvas.height/canvasScale + "px";
 
@@ -1546,7 +1549,7 @@ var RevealChalkboard = (function(){
     {
         if ( !printMode ) {
             slideIndices = Reveal.getIndices();
-            closeChalkboard();
+            closeWhiteboard();
             playbackEvents( 0 );
         }
     }
@@ -1583,7 +1586,7 @@ var RevealChalkboard = (function(){
         if (LOCAL_STORAGE)
         {
             console.log("save to local storage");
-            localStorage['chalkboard'] = JSON.stringify(storage);
+            localStorage['whiteboard'] = JSON.stringify(storage);
             return;
         }
 
@@ -1604,10 +1607,10 @@ var RevealChalkboard = (function(){
 
 
     // when drawing, stop ANY click (e.g. menu icon)
-    // only allow clicks for our (.chalkboard) buttons
+    // only allow clicks for our (.whiteboard) buttons
     window.addEventListener( "click", function(evt) 
     {
-        if (tool && !evt.target.classList.contains("chalkboard"))
+        if (tool && !evt.target.classList.contains("whiteboard"))
         {
             evt.preventDefault();
             evt.stopPropagation();
@@ -1636,32 +1639,28 @@ var RevealChalkboard = (function(){
      ******************************************************************/
 
     Reveal.addKeyBinding( { keyCode: 46, key: 'Delete', 
-        description: 'Reset Chalkboard' }, 
+        description: 'Clear Slide' }, 
         clearSlide );
 
-    Reveal.addKeyBinding( { keyCode: 67, key: 'C', 
-        description: 'Toggle Notes' }, 
+    Reveal.addKeyBinding( { keyCode: 68, key: 'D', 
+        description: 'Toggle Drawing' }, 
         function(){ selectTool(ToolType.PEN); } );
-
-    Reveal.addKeyBinding( { keyCode: 68, key: 'D',
-        description: 'Download Notes' },
-        downloadData );
 
     Reveal.addKeyBinding( { keyCode: 69, key: 'E',
         description: 'Toggle Eraser' },
         function(){ selectTool(ToolType.ERASER); });
 
-    Reveal.addKeyBinding( { keyCode: 84, key: 'T', 
-        description: 'Toggle Chalkboard' }, 
-        toggleChalkboard );
+    Reveal.addKeyBinding( { keyCode: 87, key: 'W', 
+        description: 'Toggle Whiteboard' }, 
+        toggleWhiteboard );
 
     Reveal.addKeyBinding( { keyCode: 90, key: 'Z', 
-        description: 'Chalkboard Undo' }, 
+        description: 'Whiteboard Undo' }, 
         drawUndo );
 
     Reveal.addKeyBinding( { keyCode: 13, key: 'Enter', 
-        description: 'Add Page to Chalkboard' }, 
-        addChalkboardPage );
+        description: 'Extend whiteboard by one page' }, 
+        addWhiteboardPage );
 
 
 
@@ -1677,7 +1676,7 @@ var RevealChalkboard = (function(){
                 
                 if (printMode)
                 {
-                    // load scribbles, create chalkboard slides, then resolve promise
+                    // load scribbles, create whiteboard slides, then resolve promise
                     loadData().then(createPrintout).then(resolve);
                 }
                 else
@@ -1686,10 +1685,14 @@ var RevealChalkboard = (function(){
                     loadData().then(resolve);
                 }
             });
-        }
+        },
+
+
+        // menu plugin need access to trigger it
+        downloadNotes: downloadNotes 
     }
 
 })();
 
-Reveal.registerPlugin( 'chalkboard', RevealChalkboard );
+Reveal.registerPlugin( 'whiteboard', RevealWhiteboard );
 
