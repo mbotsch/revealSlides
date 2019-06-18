@@ -167,7 +167,10 @@ $endif$
 
       // use local mathjax installation, use CommonHTML
       // temporarily avoid CommonHTML due to Chrome bug
-      math: { mathjax: '$template$/MathJax/MathJax.js', config: 'TeX-AMS_HTML-full' },
+      math: { 
+        mathjax: '$template$/MathJax/MathJax.js', 
+        config:  $if(math)$ '$math$' $else$ 'TeX-AMS_HTML-full' $endif$
+      },
 
 
       // setup reveal-menu
@@ -240,6 +243,7 @@ $endif$
       { src: '$template$/mb-plugins/zoom/zoom.js', async: true },
       { src: '$template$/mb-plugins/search/search.js', async: true },
       { src: '$template$/mb-plugins/menu/menu.js', async: true },
+      { src: '$template$/mb-plugins/oversize/oversize.js', async: true },
       ]
 
 	  });
