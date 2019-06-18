@@ -19,14 +19,12 @@ var RevealOversize = (function(){
         slide.style.border = "none";
         if (slideWidth > pageWidth)
         {
-            slide.style.borderRight = "3px dashed red";
-            slide.style.borderLeft  = "3px dashed red";
+            slide.style.border = "3px dashed red";
             console.log("width of slide " + indices.h + " is " + slideWidth);
         }
         if (slideHeight > pageHeight)
         {
-            slide.style.borderTop    = "3px dashed red";
-            slide.style.borderBottom = "3px dashed red";
+            slide.style.border = "3px dashed red";
             console.log("height of slide " + indices.h + " is " + slideHeight);
         }
     }

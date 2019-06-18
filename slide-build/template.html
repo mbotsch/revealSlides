@@ -243,7 +243,9 @@ $endif$
       { src: '$template$/mb-plugins/zoom/zoom.js', async: true },
       { src: '$template$/mb-plugins/search/search.js', async: true },
       { src: '$template$/mb-plugins/menu/menu.js', async: true },
+$if(markOversize)$
       { src: '$template$/mb-plugins/oversize/oversize.js', async: true },
+$endif$
       ]
 
 	  });
