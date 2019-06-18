@@ -50,6 +50,6 @@ The whiteboard plugin is tested using a Lenovo X1 Yoga running Linux and a MacBo
 
 MIT licensed
 
-Copyright (C) 2016 Asvin Goel
+Copyright (C) 2016 Asvin Goel\
 Copyright (C) 2017-2019 Mario Botsch
 
