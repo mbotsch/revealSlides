@@ -98,6 +98,11 @@ body {
     border-radius: 5px;
     padding: 10px;
 }
+.reveal .boxed ol,
+.reveal .boxed dl,
+.reveal .boxed ul {
+  margin-bottom: 0em;
+}
 
 .reveal .w10 { margin-left: auto; margin-right: auto; width:10%; }
 .reveal .w20 { margin-left: auto; margin-right: auto; width:20%; }
