@@ -233,6 +233,12 @@ $endif$
       38: function() { Reveal.prev(); },                       // down: prev slide
       },
 
+$if(quizServer)$
+      quiz: {
+           server: "$quizServer$",
+      },
+$endif$
+
 
       // load plugins
 	  dependencies: [
