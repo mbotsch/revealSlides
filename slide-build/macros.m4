@@ -1,4 +1,4 @@
-
+divert(-1)dnl cf https://stackoverflow.com/questions/13842575/gnu-m4-strip-empty-lines
 changequote(`{{',`}}')
 
 define({{COL}},    {{<div style="float:left; width:$1%; margin-bottom:10px;">}})
@@ -71,3 +71,4 @@ define({{MARK}}, {{<div class="highlight" style="display:inline-block;">{{$*}}</
 
 define({{CHECK}}, {{<span style="color:green; font-weight:bold"> ✓ </span>}})
 define({{NOCHECK}},   {{<span style="color:red; font-weight:bold"> ✗ </span>}})
+divert(0)dnl
