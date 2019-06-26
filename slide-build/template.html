@@ -26,6 +26,10 @@
 	<!-- Setup code formatting with highlight.js -->
 	<link rel="stylesheet" href="$template$/mb-plugins/highlight/xcode.css">
 
+$for(customCSS)$
+    <link rel="stylesheet" href="$customCSS$">
+$endfor$
+
     <!-- color picker for whiteboard plugin -->
     <script src="$template$/piklor.js/src/piklor.js"></script>
 
@@ -246,6 +250,12 @@ $endif$
 $if(markOversize)$
       { src: '$template$/mb-plugins/oversize/oversize.js', async: true },
 $endif$
+$for(customRevealPlugins)$
+      { src: '$customRevealPlugins$' },
+$endfor$
+$for(customAsyncRevealPlugins)$
+      { src: '$customAsyncRevealPlugins$', async: true},
+$endfor$
       ]
 
 	  });
