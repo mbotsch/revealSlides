@@ -1306,6 +1306,33 @@ var RevealWhiteboard = (function(){
         hideCursor();
     };
 
+    function duplicatePrevious()
+    {
+        let cur = Reveal.getIndices();
+
+        if (cur.f === undefined || cur.f < 0) {
+            // no previous frame
+            console.log("duplicate: no previous frame");
+            return;
+        }
+        if (hasSlideData(cur))
+        {
+            if (!confirm("Really copy from last slide? Current slide is not empty")) {
+                return;
+            }
+        }
+        let last = {
+            h: cur.h,
+            v: cur.v,
+            f: cur.f - 1};
+
+        function jsonCopy(src) { return JSON.parse(JSON.stringify(src)); }
+        var data = getSlideData(cur);
+        data.events = jsonCopy(getSlideData(last).events);
+        console.log("duplicated", last, " to ", cur);
+        playbackEvents(0);
+    }
+
 
 
     /*****************************************************************
@@ -1661,6 +1688,10 @@ var RevealWhiteboard = (function(){
     Reveal.addKeyBinding( { keyCode: 13, key: 'Enter', 
         description: 'Extend whiteboard by one page' }, 
         addWhiteboardPage );
+
+    Reveal.addKeyBinding( { keyCode: 82, key: 'R', 
+        description: 'Repeat (duplicate) drawings from previous frame' }, 
+        duplicatePrevious );
 
 
 
