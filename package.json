@@ -1,15 +1,24 @@
 {
-  "name": "slide-build",
+  "name": "revealSlides",
   "version": "1.0.0",
-  "description": "Build slides by calling 'make' on file change and trigger browser reload",
+  "description": "Build interactive HTML slides with pandoc and revealjs",
   "main": "gruntfile.js",
   "scripts": {
     "start": "grunt"
   },
-  "author": "Mario Botsch",
-  "license": "ISC",
+  "author": {
+      "name": "Mario Botsch",
+      "email": "botsch@techfak.uni-bielefeld.de",
+      "web": "http://graphics.uni-bielefeld.de"
+  },
+  "repository": {
+      "type": "git",
+      "url": "git://github.com/mbotsch/revealSlides.git"
+  },
+  "license": "MIT",
   "devDependencies": {
     "grunt": "^1.0.4",
+    "grunt-cli": "^1.3.2",
     "grunt-contrib-connect": "^2.0.0",
     "grunt-contrib-watch": "^1.1.0",
     "grunt-exec": "^3.0.0"
