@@ -168,8 +168,10 @@ $endif$
       // use local mathjax installation, use CommonHTML
       // temporarily avoid CommonHTML due to Chrome bug
       math: { 
-        mathjax: '$template$/MathJax/MathJax.js', 
-        config:  $if(math)$ '$math$' $else$ 'TeX-AMS_HTML-full' $endif$
+$if(math)$ 
+        config:  '$math$,
+$endif$
+        mathjax: '$template$/MathJax/MathJax.js'
       },
 
 
