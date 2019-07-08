@@ -25,7 +25,7 @@ setup:
 	@cd $(REVEAL) && npm install
 
 server: setup html
-	@grunt --gruntfile $(REVEAL)/gruntfile.js -b $(REVEAL)/ --root=`pwd`
+	@$(REVEAL)/node_modules/grunt-cli/bin/grunt --gruntfile $(REVEAL)/gruntfile.js -b $(REVEAL)/ --root=`pwd`
 
 $(HTML): $(SRC) $(TEMPLATE) $(MACROS)
 
