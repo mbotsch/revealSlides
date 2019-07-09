@@ -7,13 +7,13 @@
     "start": "grunt"
   },
   "author": {
-      "name": "Mario Botsch",
-      "email": "botsch@techfak.uni-bielefeld.de",
-      "web": "http://graphics.uni-bielefeld.de"
+    "name": "Mario Botsch",
+    "email": "botsch@techfak.uni-bielefeld.de",
+    "web": "http://graphics.uni-bielefeld.de"
   },
   "repository": {
-      "type": "git",
-      "url": "git://github.com/mbotsch/revealSlides.git"
+    "type": "git",
+    "url": "git://github.com/mbotsch/revealSlides.git"
   },
   "license": "MIT",
   "devDependencies": {
