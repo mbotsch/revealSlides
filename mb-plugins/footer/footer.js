@@ -28,7 +28,9 @@ var RevealFooter = (function(){
                 if (parent.nodeName == "P")
                 {
                     slide.appendChild(footer);
-                    parent.parentElement.removeChild(parent);
+                    if (parent.childNodes.length == 0) {
+                        parent.parentElement.removeChild(parent);
+                    }
                 }
             }
         });

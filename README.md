@@ -14,51 +14,49 @@ See <https://pmp-library.github.io/pmp-slides/slides.html> for a demo of the int
 ## Getting started
 
 1. Install a recent version (at least 2.6) of [pandoc](https://pandoc.org/)
-2. **Recursively** clone this repository:\
+2. Install a recent version (at least 10.16) of [nodejs](https://nodejs.org/):\
+   `sudo apt-get install nodejs`.
+3. **Recursively** clone this repository:\
    `$ git clone --recursive https://github.com/mbotsch/revealSlides.git`
-3. Put (or soft-link) the directory `revealSlides` into the directory containing your markdown slides:\
+
+
+## Generating and viewing HTML slides (Option 1)
+
+1. Put (or soft-link) the directory `revealSlides` into the directory containing your markdown slides:\
    `$ cd <your-slide-directory> && ln -s <path-to-revealSlides> .`
-4. Copy the `Makefile` from `revealSlides/slide-build/` into the directory containing your markdown slides:\
+2. Copy the `Makefile` from `revealSlides/slide-build/` into the directory containing your markdown slides:\
    `$ cd <your-slide-directory> && cp ./revealSlides/slide-build/Makefile .`
-5. Call `make` to compile your slides to HTML.
+3. Call `make` to compile your slides to HTML.
+4. To view/present your slides, open them in a browser. We recommend Chromium or Chrome. Don't forget to allow
+   the browser to access local files though a command line option:\
+   `chromium-browser --allow-file-access-from-files  my-slides.html`
 
 
-## Viewing HTML slides
-
-For viewing/presenting the HTML slides we recommend Chromium or Chrome, in particular for using the
-virtual chalkboard. There are two options to view the slides in a webbrowser:
-- Open the HTML-file in your browswer. This, however, requires a command-line option to allow
-  the browser to load resources from your local file system:\
-  `chromium-browser --allow-file-access-from-files  my-slides.html`
-- Start a local webserver that serves your slide directory and open it in a webserver. For instance:\
-  `python -m SimpleHTTPServer & chromium-browser http://localhost:8000`
-
-
-## Recommended compilation procedure
+## Generating and viewing HTML slides (Option 2)
 
 The most comfortable way to edit, compile, and view your slides is to start a
 process that watches your markdown files, re-compiles them whenever they
-change, and then triggers a re-load on the webserver/webbrowser. This process
-can be started by `$ make server`. It automatically opens
-`http://localhost:8000` on your default webbrowser, but you can also view it in
-any other browser (in case Chromium is not your default browser).
+change, and then triggers a re-load on the webserver/webbrowser. 
 
-This process is implemented through `nodejs` and `grunt`, which you have to install before:\
-`sudo apt-get install nodejs && sudo npm install -g grunt`.
-
-To clean-up your slide directory, call `make clean` to remove the compiled HTML
-files. To clean-up the install nodejs and grunt files, call `make clean` in the
-`revealSlides` folder.
+1. Put (or soft-link) the directory `revealSlides` into the directory containing your markdown slides:\
+   `$ cd <your-slide-directory> && ln -s <path-to-revealSlides> .`
+2. Copy the `Makefile` from `revealSlides/slide-build/` into the directory containing your markdown slides:\
+   `$ cd <your-slide-directory> && cp ./revealSlides/slide-build/Makefile .`
+3. Call `make server` to start a process that watches your markdown files, 
+   compiles them to HTML whenever they change, and serves your slides on a local webserver at port 8000.
+4. Open the local webserver to view your slides:\
+   `chromium-browser http://localhost:8000`
 
 
 ## Slide Authoring
 
 The syntax follows [pandoc's markdown](https://pandoc.org/MANUAL.html#pandocs-markdown). 
-I will add an example presentation soon, so you can copy-and-paste from these examples.
 
-Here's a first (incomplete) example presentattion: 
+Here is a (German) example presentation demonstrating most of the features of the HTML slides, so you can just copy-and-paste from there:
+<https://github.com/mbotsch/eLearning> 
+
+Here is an example presentation that features interactive geometry processing demos:
 <https://pmp-library.github.io/pmp-slides/slides.html> 
-
 
 
 ## General Usage

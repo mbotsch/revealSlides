@@ -129,16 +129,15 @@ var RevealQuiz = (function(){
     var jingleAnswer   = new Audio(path+'/wwm-answer.mp3');
 
 
-    // is this window a presenter preview? see reveal.js:isSpeakerNotes()
-    // if it is, then shut up and do not play audio jingles
-    var shutUp = !!Reveal.isSpeakerNotes();
+    // how many answers on current slide?
+    var numAnswers = 0;
 
 
     // what to do on slide change
     function slideChanged()
     {
         // if not presenter displayw slide preview
-        if (!shutUp)
+        if (!Reveal.isSpeakerNotes())
         {
             // stop sounds
             jingleQuestion.pause();
@@ -154,12 +153,15 @@ var RevealQuiz = (function(){
 
             // reset state
             ballotState = "not_init";
+            numAnswers  = 0;
 
             // is this a quiz slide? -> find answers
             // this is the OLD version, which should be deprecated sometime
             var answers = Reveal.getCurrentSlide().getElementsByClassName('answer');
             if (answers.length)
             {
+                numAnswers += answers.length;
+
                 // hide answers' right/wrong classification
                 for (i = 0; i < answers.length; i++)
                 {
@@ -180,6 +182,8 @@ var RevealQuiz = (function(){
             answers = Reveal.getCurrentSlide().querySelectorAll('.reveal .quiz ul li');
             if (answers.length)
             {
+                numAnswers += answers.length;
+
                 // hide answers' right/wrong classification
                 for (var i = 0; i < answers.length; i++)
                 {
@@ -368,14 +372,22 @@ var RevealQuiz = (function(){
     // ballot states
     function switchBallotState()
     {
-        console.log("ballot state: " + ballotState);
+        console.log("old ballot state: " + ballotState);
 
         switch (ballotState)
         {
             case "not_init":
-                startBallot();
-                showVotes();
-                ballotState = "open";
+                if (numAnswers)
+                {
+                    startBallot();
+                    showVotes();
+                    ballotState = "open";
+                }
+                else
+                {
+                    // just to trigger authentication
+                    closeBallot();
+                }
                 break;
 
             case "open":
