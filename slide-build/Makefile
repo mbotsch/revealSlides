@@ -10,10 +10,11 @@ REVEAL   := ./revealSlides
 MACROS   := $(REVEAL)/slide-build/macros.m4
 TEMPLATE := $(REVEAL)/slide-build/template.html
 FILTER   := $(REVEAL)/slide-build/pandoc-filter/$(OS)
+NODE     := $(REVEAL)/node_modules
 
 ###  EXPLICIT RULES  ##########################################################
 
-.PHONY: html setup server clean 
+.PHONY: html server clean 
 
 html: Makefile $(HTML)
 
@@ -21,11 +22,11 @@ Makefile: $(REVEAL)/slide-build/Makefile
 	@\cp -f $(REVEAL)/slide-build/Makefile .
 	$(warning Local Makefile updated from $(REVEAL)/slide-build/. Please re-run make.)
 
-setup:
-	@cd $(REVEAL) && npm install
+$(NODE):
+	@cd $(REVEAL) && make
 
-server: setup html
-	@$(REVEAL)/node_modules/grunt-cli/bin/grunt --gruntfile $(REVEAL)/gruntfile.js -b $(REVEAL)/ --root=`pwd`
+server: html $(NODE)
+	@$(NODE)/grunt-cli/bin/grunt --gruntfile $(REVEAL)/gruntfile.js -b $(REVEAL)/ --root=`pwd`
 
 $(HTML): $(SRC) $(TEMPLATE) $(MACROS)
 

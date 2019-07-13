@@ -1,7 +1,7 @@
 
-.PHONY: install clean
+.PHONY: clean
 
-install: Makefile package.json gruntfile.js
+node_modules: Makefile package.json gruntfile.js
 	npm install
 
 clean:
