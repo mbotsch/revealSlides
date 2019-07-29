@@ -16,7 +16,7 @@
 
 var RevealWhiteboard = (function(){
 
-    var DEBUG  = false;
+    var DEBUG = false;
     var LOCAL_STORAGE = false;
 
 
@@ -214,11 +214,15 @@ var RevealWhiteboard = (function(){
         canvas.style.top = "0px";
         canvas.style.left = "0px";
 
+        // DO NOT USE low-latency contect, it fails on Chrome/Linux for 
+        // whiteboards with >2 pages
+        //var opts = {lowLatency: true, desynchronized: true};
+        //var ctx = canvas.getContext("2d", opts);
+        //if (ctx.getContextAttributes && ctx.getContextAttributes().desynchronized)
+            //console.log('Low latency canvas supported!');
+
         // setup highDPI scaling & draw style
-        var opts = {lowLatency: true, desynchronized: true};
-        var ctx = canvas.getContext("2d", opts);
-        if (ctx.getContextAttributes && ctx.getContextAttributes().desynchronized)
-            console.log('Low latency canvas supported!');
+        var ctx = canvas.getContext("2d");
         ctx.scale(canvasScale, canvasScale);
         ctx.lineCap   = 'round';
         ctx.lineJoint = 'round';
