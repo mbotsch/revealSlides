@@ -60,8 +60,6 @@ $endfor$
     <!-- MathJax config -->
     <script type="text/x-mathjax-config">
       MathJax.Hub.Config({
-          menuSettings: { zoom: "Double-Click" },
-          styles: { ".reveal section .MJXc-display": { margin: "0.5em 0em 1em 0em" } },
           TeX: {
               Macros: {
                 R: "{\\mathrm{{I}\\kern-.15em{R}}}",
@@ -247,11 +245,11 @@ $endif$
       { src: '$template$/reveal.js-plugins/chart/Chart.min.js' },
       { src: '$template$/reveal.js-plugins/chart/csv2chart.js' },
       { src: '$template$/reveal.js/plugin/highlight/highlight.js' },
+      { src: '$template$/reveal.js/plugin/notes/notes.js' },
 	  { src: '$template$/mb-plugins/math/math.js' },
       { src: '$template$/mb-plugins/whiteboard/whiteboard.js' }, 
       { src: '$template$/mb-plugins/quiz/quiz.js' },
       { src: '$template$/mb-plugins/footer/footer.js' },
-	  { src: '$template$/mb-plugins/notes/notes.js', async: true },
       { src: '$template$/mb-plugins/zoom/zoom.js', async: true },
       { src: '$template$/mb-plugins/search/search.js', async: true },
       { src: '$template$/mb-plugins/menu/menu.js', async: true },

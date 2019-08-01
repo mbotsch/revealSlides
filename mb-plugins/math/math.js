@@ -8,8 +8,7 @@ var RevealMath = window.RevealMath || (function(){
 
 	var options = Reveal.getConfig().math || {};
 	var mathjax = options.mathjax || 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js';
-    var config = options.config || 'TeX-AMS_CHTML-full';
-	//var config = options.config || 'TeX-AMS_SVG-full';
+    var config = options.config || 'TeX-AMS_SVG-full';
 	var url = mathjax + '?config=' + config;
 
 	var defaultOptions = {
@@ -21,9 +20,12 @@ var RevealMath = window.RevealMath || (function(){
 		},
 		skipStartupTypeset: true,
         AssistiveMML: { disabled: true },
+        menuSettings: { zoom: "Double-Click" },
+        styles: { ".reveal section .MJXc-display": { margin: "0.5em 0em 1em 0em" },
+                  ".reveal section .MathJax_SVG_Display": { margin: "0.5em 0em 1em 0em" } },
         "CommonHTML": { matchFontHeight: false },
         "HTML-CSS":   { matchFontHeight: false },
-        "SVG":        { matchFontHeight: false, scale: "90" }
+        "SVG":        { matchFontHeight: false, scale: "90", useFontCache: true, useGlobalCache: false }
 	};
 
 	function defaults( options, defaultOptions ) {
