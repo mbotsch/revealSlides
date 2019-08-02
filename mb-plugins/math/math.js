@@ -23,6 +23,7 @@ var RevealMath = window.RevealMath || (function(){
         menuSettings: { zoom: "Double-Click" },
         styles: { ".reveal section .MJXc-display": { margin: "0.5em 0em 1em 0em" },
                   ".reveal section .MathJax_SVG_Display": { margin: "0.5em 0em 1em 0em" } },
+        "fast-preview": { disabled: true },
         "CommonHTML": { matchFontHeight: false },
         "HTML-CSS":   { matchFontHeight: false },
         "SVG":        { matchFontHeight: false, scale: "90", useFontCache: true, useGlobalCache: false }
