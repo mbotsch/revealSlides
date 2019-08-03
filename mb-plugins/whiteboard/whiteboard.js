@@ -1016,20 +1016,6 @@ var RevealWhiteboard = (function(){
      ******************************************************************/
 
     /*
-     * erase at/around given point
-     */
-    function erase(context,x,y)
-    {
-        context.save();
-        context.beginPath();
-        context.arc(x, y, eraserRadius, 0, 2 * Math.PI, false);
-        context.clip();
-        context.clearRect(x-eraserRadius, y-eraserRadius, eraserRadius*2, eraserRadius*2);
-        context.restore();
-    }
-
-
-    /*
      * clear given canvas
      */
     function clearCanvas( ctx )
@@ -1144,19 +1130,30 @@ var RevealWhiteboard = (function(){
      */
     function eraseCurve( ctx, event )
     {
+        ctx.save();
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.lineWidth = 20;
+        ctx.beginPath();
+
         // old syntax
         if (event.curve)
         {
-            for (var i=0; i<event.curve.length; i++)
-                erase(ctx, event.curve[i].x, event.curve[i].y);
+            var curve = event.curve;
+            ctx.moveTo(curve[0].x, curve[0].y);
+            for (var i=0; i<curve.length; i++)
+                ctx.lineTo(curve[i].x, curve[i].y);
         }
         // new syntax
         else if (event.coords)
         {
-            for (var i=0; i<event.coords.length-1; i+=2)
-                erase(ctx, event.coords[i], event.coords[i+1]);
+            var coords = event.coords;
+            ctx.moveTo(coords[0], coords[1]);
+            for (var i=2; i<coords.length-1; i+=2)
+                ctx.lineTo(coords[i], coords[i+1]);
         }
 
+        ctx.stroke();
+        ctx.restore();
     };
 
 
@@ -1196,8 +1193,8 @@ var RevealWhiteboard = (function(){
             {
                 showCursor(eraserCursor);
                 activeStroke = { type:  "erase", 
-                                 coords: [mouseX, mouseY] };
-                erase(ctx,mouseX,mouseY);
+                                 coords: [mouseX, mouseY, mouseX, mouseY] };
+                eraseCurve(ctx, activeStroke);
             }
             // draw mode
             else
@@ -1252,7 +1249,7 @@ var RevealWhiteboard = (function(){
 
                 if ( activeStroke.type == "erase" )
                 {
-                    erase(ctx, mouseX, mouseY);
+                    eraseCurve(ctx, activeStroke);
                 }
                 else
                 {
@@ -1309,6 +1306,7 @@ var RevealWhiteboard = (function(){
         }
         hideCursor();
     };
+
 
     function duplicatePrevious()
     {
