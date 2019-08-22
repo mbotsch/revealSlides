@@ -196,34 +196,34 @@ $endif$
 
       // setup charts
       chart: {
-        defaults: {
-            global: {
-                "defaultFontFamily": "Lato",
-                "defaultFontColor": "black",
-                "defaultFontSize": 20,
-                title: {
-                    "fontFamily": "Lato",
-                    "fontSize": 30,
-                },
-                legend: {
-                    "position": "bottom"
-                }
-            },
-            responsive: "false"
-        },
-        line: {
-            backgroundColor: [ "rgba(42,157,223,.1)", "rgba(245,159,0,.1)", "rgba(182,200,40,.1)" ],
-            borderColor:     [ "rgba(42,157,223,1)", "rgba(245,159,0,1)", "rgba(182,200,40,1)" ],
-        },
-        bar: {
-            backgroundColor: [ "rgba(42,157,223,.8)", "rgba(245,159,0,.8)", "rgba(182,200,40,.8)" ],
-            borderColor:     [ "rgba(42,157,223,1)", "rgba(245,159,0,1)", "rgba(182,200,40,1)" ]
-        },
-        pie: {
-            backgroundColor: [ ["rgba(0,0,0,.8)" , "rgba(220,20,20,.8)", "rgba(20,220,20,.8)", "rgba(220,220,20,.8)", "rgba(20,20,220,.8)"] ]},
-        radar: {
-            borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ]
-        }
+          defaults: {
+              global: {
+                  "defaultFontFamily": "Lato",
+                  "defaultFontColor": "black",
+                  "defaultFontSize": 20,
+                  title: {
+                      "fontFamily": "Lato",
+                      "fontSize": 30,
+                  },
+                  legend: {
+                      "position": "bottom"
+                  }
+              },
+              responsive: "false"
+          },
+          line: {
+              backgroundColor: [ "rgba(42,157,223,.1)", "rgba(245,159,0,.1)", "rgba(182,200,40,.1)" ],
+              borderColor:     [ "rgba(42,157,223,1)", "rgba(245,159,0,1)", "rgba(182,200,40,1)" ],
+          },
+          bar: {
+              backgroundColor: [ "rgba(42,157,223,.8)", "rgba(245,159,0,.8)", "rgba(182,200,40,.8)" ],
+              borderColor:     [ "rgba(42,157,223,1)", "rgba(245,159,0,1)", "rgba(182,200,40,1)" ]
+          },
+          pie: {
+              backgroundColor: [ ["rgba(0,0,0,.8)" , "rgba(220,20,20,.8)", "rgba(20,220,20,.8)", "rgba(220,220,20,.8)", "rgba(20,20,220,.8)"] ]},
+          radar: {
+              borderColor: [ "rgba(20,220,220,.8)" , "rgba(220,120,120,.8)", "rgba(20,120,220,.8)" ]
+          }
       },
 
 
@@ -242,10 +242,11 @@ $endif$
 
       // load plugins
 	  dependencies: [
-      { src: '$template$/reveal.js-plugins/chart/Chart.min.js' },
-      { src: '$template$/reveal.js-plugins/chart/csv2chart.js' },
       { src: '$template$/reveal.js/plugin/highlight/highlight.js' },
       { src: '$template$/reveal.js/plugin/notes/notes.js' },
+      { src: '$template$/mb-plugins/charts/Chart.js' },
+      { src: '$template$/mb-plugins/charts/Plugin.Errorbars.min.js' },
+      { src: '$template$/mb-plugins/charts/csv2chart.js' },
 	  { src: '$template$/mb-plugins/math/math.js' },
       { src: '$template$/mb-plugins/whiteboard/whiteboard.js' }, 
       { src: '$template$/mb-plugins/quiz/quiz.js' },
