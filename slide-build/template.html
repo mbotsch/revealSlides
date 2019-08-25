@@ -161,7 +161,7 @@ $endif$
       height:       $if(height)$ $height$ $else$  768 $endif$,
       minScale:     0.2,
       maxScale:     5,
-      //pdfMaxPagesPerSlide: 10, // slides are cropped on one page for PDF export
+      pdfMaxPagesPerSlide: 1,
       pdfSeparateFragments: true,
 	  hideInactiveCursor: true,
 	  hideCursorTime: 3000,
@@ -254,9 +254,6 @@ $endif$
       { src: '$template$/mb-plugins/zoom/zoom.js', async: true },
       { src: '$template$/mb-plugins/search/search.js', async: true },
       { src: '$template$/mb-plugins/menu/menu.js', async: true },
-$if(markOversize)$
-      { src: '$template$/mb-plugins/oversize/oversize.js', async: true },
-$endif$
 $for(customRevealPlugins)$
       { src: '$customRevealPlugins$' },
 $endfor$
