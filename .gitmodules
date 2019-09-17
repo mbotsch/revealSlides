@@ -21,4 +21,4 @@
 	url = https://github.com/FortAwesome/Font-Awesome.git
 [submodule "mb-plugins"]
 	path = mb-plugins
-	url = https://github.com/mbotsch/mb-reveal-plugins.git
+	url = ../mb-reveal-plugins.git
