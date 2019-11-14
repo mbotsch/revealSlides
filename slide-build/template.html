@@ -43,15 +43,15 @@ $endfor$
 
 	<!-- Printing and PDF exports -->
 	<script>
+	  var pdf = !!window.location.search.match( /print-pdf/gi);
 	  var link = document.createElement( 'link' );
 	  link.rel = 'stylesheet';
 	  link.type = 'text/css';
-	  link.href = window.location.search.match( /print-pdf/gi ) ? '$template$/reveal.js/css/print/pdf.css' : '$template$/reveal.js/css/print/paper.css';
+	  link.href = pdf ? '$template$/reveal.js/css/print/pdf.css' : '$template$/reveal.js/css/print/paper.css';
 	  document.getElementsByTagName( 'head' )[0].appendChild( link );
 
       // MARIO version
-	  if (window.location.search.match( /print-pdf/gi ))
-      {
+      if (pdf) {
 	    var link = document.createElement( 'link' );
 	    link.rel = 'stylesheet';
 	    link.type = 'text/css';
@@ -255,6 +255,11 @@ $endfor$
       ]
 
 	  });
+      if (pdf) {
+          for (var e of document.getElementsByTagName("iframe")) {
+              e.src=e.attributes["data-src"].value;
+          }
+      }
     </script>
 
   </body>
